@@ -7,11 +7,9 @@
 \******************************************/
 
 export interface Placeholder {
-    description: string;
     name: string;
     placeholderId: number;
 }
 export interface PlaceholderCreate {
-    description: string;
     name: string;
 }

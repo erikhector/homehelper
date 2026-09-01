@@ -1,6 +1,7 @@
 using Dekiru.ApiUtils.ErrorHandling;
 using Dekiru.ApiUtils.Extensions;
 using Dekiru.ApiUtils.Spa;
+using Dekiru.ApiUtils.Domain;
 using Dekiru.Hermes;
 using HomeHelper.Data;
 using HomeHelper.Services;
@@ -14,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().ConfigureJson();
 builder.Services.AddOpenApi();
 builder.Services.AddDefaultProblemDetailsProducer();
+builder.Services.AddScoped<DomainHandlerProvider>();
 builder.Services.AddHermes();
 builder.Services.AddScoped<ContextService>();
 builder.Services.AddDbContext<HomehelperContext>(options =>
