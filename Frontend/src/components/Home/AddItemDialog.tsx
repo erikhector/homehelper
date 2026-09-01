@@ -1,14 +1,17 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 
-type AddItemDialogProps = {
+export interface AddItemFormValues {
+  category: string;
+  name: string;
+}
+
+interface AddItemDialogProps {
   isOpen: boolean;
   isPending: boolean;
   onClose: () => void;
   onSubmit: (values: AddItemFormValues) => void;
-};
-
-export type AddItemFormValues = { category: string; name: string };
+}
 
 export default function AddItemDialog({ isOpen, isPending, onClose, onSubmit }: AddItemDialogProps) {
   const { handleSubmit, register, reset } = useForm<AddItemFormValues>();

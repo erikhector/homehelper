@@ -1,7 +1,10 @@
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { Box, Chip, Divider, Paper, Stack, Typography } from "@mui/material";
 
-type TomorrowSummaryProps = { atKindergartenCount: number; homeCount: number };
+interface TomorrowSummaryProps {
+  atKindergartenCount: number;
+  homeCount: number;
+}
 
 export default function TomorrowSummary({ atKindergartenCount, homeCount }: TomorrowSummaryProps) {
   return (

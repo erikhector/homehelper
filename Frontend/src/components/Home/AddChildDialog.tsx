@@ -1,14 +1,17 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 
-type AddChildDialogProps = {
+export interface AddChildFormValues {
+  firstName: string;
+  lastName: string;
+}
+
+interface AddChildDialogProps {
   isOpen: boolean;
   isPending: boolean;
   onClose: () => void;
   onSubmit: (values: AddChildFormValues) => void;
-};
-
-export type AddChildFormValues = { firstName: string; lastName: string };
+}
 
 export default function AddChildDialog({ isOpen, isPending, onClose, onSubmit }: AddChildDialogProps) {
   const { handleSubmit, register, reset } = useForm<AddChildFormValues>();

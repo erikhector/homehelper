@@ -1,15 +1,17 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 
-type ProfileDialogProps = {
+export interface ProfileFormValues {
+  displayName: string;
+}
+
+interface ProfileDialogProps {
   displayName: string;
   isOpen: boolean;
   isPending: boolean;
   onClose: () => void;
   onSubmit: (values: ProfileFormValues) => void;
-};
-
-export type ProfileFormValues = { displayName: string };
+}
 
 export default function ProfileDialog({ displayName, isOpen, isPending, onClose, onSubmit }: ProfileDialogProps) {
   const { handleSubmit, register, reset } = useForm<ProfileFormValues>({ values: { displayName } });

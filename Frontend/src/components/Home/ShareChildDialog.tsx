@@ -1,15 +1,17 @@
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 
-type ShareChildDialogProps = {
+export interface ShareChildFormValues {
+  email: string;
+}
+
+interface ShareChildDialogProps {
   errorMessage: string | undefined;
   isOpen: boolean;
   isPending: boolean;
   onClose: () => void;
   onSubmit: (values: ShareChildFormValues) => void;
-};
-
-export type ShareChildFormValues = { email: string };
+}
 
 export default function ShareChildDialog({ errorMessage, isOpen, isPending, onClose, onSubmit }: ShareChildDialogProps) {
   const { handleSubmit, register, reset } = useForm<ShareChildFormValues>();

@@ -1,11 +1,16 @@
 import { Helmet } from "react-helmet-async";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { Alert, Box, Button, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
 
 import { login } from "Src/api/Auth";
 import { ProblemDetailsError } from "Src/api/HttpClient";
+
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
 
 export default function Index() {
   const navigate = useNavigate();
@@ -49,5 +54,3 @@ export default function Index() {
     </Box>
   );
 }
-
-type LoginFormValues = { email: string; password: string };

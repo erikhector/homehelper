@@ -1,14 +1,18 @@
-import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import { useContext, useState } from "react";
+import { Link, Outlet, useNavigate } from "react-router";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import { useContext, useState } from "react";
 import { AppBar, Box, IconButton, LinearProgress, Menu, MenuItem, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Outlet, useNavigate } from "react-router";
+
+import type { ProfileFormValues } from "Src/components/ProfileDialog";
 
 import { getCurrentUser, logout, updateDisplayName } from "Src/api/Auth";
-import ProfileDialog, { type ProfileFormValues } from "Src/components/ProfileDialog";
+
+import ProfileDialog from "Src/components/ProfileDialog";
+
 import { ThemeModeContext } from "Src/styles/ThemeModeContext";
 
 export default function Layout() {
@@ -44,16 +48,16 @@ export default function Layout() {
   return (
     <Box sx={{ minHeight: "100vh" }}>
       <AppBar color="inherit" elevation={0} position="static" sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Toolbar sx={{ gap: 1, justifyContent: "space-between", minHeight: { xs: 56, sm: 64 } }}>
+        <Toolbar sx={{ gap: 1, justifyContent: "space-between", minHeight: { sm: 64, xs: 56 } }}>
           <Box
             component={Link}
+            sx={{ alignItems: "center", color: "inherit", display: "flex", gap: 1.25, textDecoration: "none" }}
+            to="/children"
             onClick={(event) => {
               if (!currentUser) {
                 event.preventDefault();
               }
             }}
-            sx={{ alignItems: "center", color: "inherit", display: "flex", gap: 1.25, textDecoration: "none" }}
-            to="/children"
           >
             <Box
               sx={{

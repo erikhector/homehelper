@@ -1,7 +1,7 @@
-import FamilyRestroomRoundedIcon from "@mui/icons-material/FamilyRestroomRounded";
-import { Box, Button, Stack, Typography } from "@mui/material";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router";
+import FamilyRestroomRoundedIcon from "@mui/icons-material/FamilyRestroomRounded";
+import { Box, Button, Stack, Typography } from "@mui/material";
 
 export default function Index() {
   return (
