@@ -10,7 +10,7 @@ public class Placeholder
     public string Name { get; set; } = string.Empty;
 }
 
-public class PlaceholderContext(DbContextOptions<PlaceholderContext> options, DomainHandlerProvider domainHandlerProvider) : DbContext(options)
+public class HomehelperContext(DbContextOptions<HomehelperContext> options, DomainHandlerProvider domainHandlerProvider) : DbContext(options)
 {
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

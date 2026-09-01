@@ -5,7 +5,7 @@ using HomeHelper.Data;
 
 namespace HomeHelper.Services;
 
-public class ContextService(PlaceholderContext context) : ContextServiceBase<PlaceholderContext>(context)
+public class ContextService(HomehelperContext context) : ContextServiceBase<HomehelperContext>(context)
 {
     public override IQueryable<T> ApplyFiltering<T>(IQueryable<T> query, string? filter)
     {

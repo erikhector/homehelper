@@ -16,8 +16,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddDefaultProblemDetailsProducer();
 builder.Services.AddHermes();
 builder.Services.AddScoped<ContextService>();
-builder.Services.AddDbContext<PlaceholderContext>(options =>
-    options.UseSqlServer(builder.Configuration["PlaceholderContext"]));
+builder.Services.AddDbContext<HomehelperContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
 
 var app = builder.Build();
 
