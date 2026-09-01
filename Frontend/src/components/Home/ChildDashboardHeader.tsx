@@ -8,7 +8,7 @@ import { ParentChildRole } from "Src/api/Enums";
 
 interface ChildDashboardHeaderProps {
   activeChildId: "" | number;
-  children: Child[];
+  childProfiles: Child[];
   currentDate: string;
   currentUserId: number | undefined;
   onAddChild: () => void;
@@ -20,7 +20,7 @@ interface ChildDashboardHeaderProps {
 
 export default function ChildDashboardHeader({
   activeChildId,
-  children,
+  childProfiles,
   currentDate,
   currentUserId,
   onAddChild,
@@ -85,7 +85,7 @@ export default function ChildDashboardHeader({
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel id="child-select-label">Barn</InputLabel>
           <Select label="Barn" labelId="child-select-label" value={activeChildId} onChange={(event) => onSelectChild(event.target.value)}>
-            {children.map((child) => (
+            {childProfiles.map((child) => (
               <MenuItem key={child.childId} value={child.childId}>
                 {[child.firstName, child.lastName].filter(Boolean).join(" ")}
               </MenuItem>

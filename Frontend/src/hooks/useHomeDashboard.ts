@@ -1,0 +1,97 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import type { Item } from "Src/api/Dto";
+
+import { getCurrentUser } from "Src/api/Auth";
+import {
+  applyItemTemplate,
+  createChild,
+  createItem,
+  createItemTemplate,
+  deleteChild,
+  deleteItem,
+  deleteItemTemplate,
+  getChildren,
+  getItems,
+  getItemTemplates,
+  revokeChildAccess,
+  shareChild,
+  updateItemQuantities
+} from "Src/api/Children";
+
+export default function useHomeDashboard(selectedChildId: "" | number) {
+  const queryClient = useQueryClient();
+  const currentUserQuery = useQuery({ queryFn: getCurrentUser, queryKey: ["current-user"], retry: false });
+  const childrenQuery = useQuery({ queryFn: getChildren, queryKey: ["children"] });
+  const itemTemplatesQuery = useQuery({ queryFn: getItemTemplates, queryKey: ["item-templates"] });
+  const activeChildId: "" | number = selectedChildId || childrenQuery.data?.[0]?.childId || "";
+  const itemsQuery = useQuery({
+    enabled: activeChildId !== "",
+    queryFn: () => getItems(activeChildId as number),
+    queryKey: ["children", activeChildId, "items"]
+  });
+  const createChildMutation = useMutation({
+    mutationFn: ({ firstName, lastName }: { firstName: string; lastName: string }) => createChild({ firstName, lastName: lastName || null }),
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["children"] })
+  });
+  const createItemMutation = useMutation({
+    mutationFn: ({ category, childId, name }: { category: string; childId: number; name: string }) => createItem(childId, { category, name }),
+    onSuccess: async (_, variables) => queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] })
+  });
+  const updateItemQuantitiesMutation = useMutation({
+    mutationFn: ({
+      childId,
+      homeQuantity,
+      itemId,
+      kindergartenQuantity
+    }: Pick<Item, "homeQuantity" | "kindergartenQuantity"> & { childId: number; itemId: number }) =>
+      updateItemQuantities(childId, itemId, { homeQuantity, kindergartenQuantity }),
+    onSuccess: async (_, variables) => queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] })
+  });
+  const deleteItemMutation = useMutation({
+    mutationFn: ({ childId, itemId }: { childId: number; itemId: number }) => deleteItem(childId, itemId),
+    onSuccess: async (_, variables) => queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] })
+  });
+  const deleteChildMutation = useMutation({
+    mutationFn: deleteChild,
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["children"] })
+  });
+  const revokeChildAccessMutation = useMutation({
+    mutationFn: ({ childId, parentUserId }: { childId: number; parentUserId: number }) => revokeChildAccess(childId, parentUserId),
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["children"] })
+  });
+  const shareChildMutation = useMutation({
+    mutationFn: ({ childId, email }: { childId: number; email: string }) => shareChild(childId, { email }),
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["children"] })
+  });
+  const createItemTemplateMutation = useMutation({
+    mutationFn: ({ childId, name }: { childId: number; name: string }) => createItemTemplate(childId, { name }),
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["item-templates"] })
+  });
+  const applyItemTemplateMutation = useMutation({
+    mutationFn: ({ childId, itemTemplateId }: { childId: number; itemTemplateId: number }) => applyItemTemplate(childId, itemTemplateId),
+    onSuccess: async (_, variables) => queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] })
+  });
+  const deleteItemTemplateMutation = useMutation({
+    mutationFn: deleteItemTemplate,
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["item-templates"] })
+  });
+
+  return {
+    activeChildId,
+    applyItemTemplateMutation,
+    childrenQuery,
+    createChildMutation,
+    createItemMutation,
+    createItemTemplateMutation,
+    currentUserQuery,
+    deleteChildMutation,
+    deleteItemMutation,
+    deleteItemTemplateMutation,
+    itemsQuery,
+    itemTemplatesQuery,
+    revokeChildAccessMutation,
+    shareChildMutation,
+    updateItemQuantitiesMutation
+  };
+}
