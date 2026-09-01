@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/web-manifest-combined.json",
-  "name": "React template",
-  "short_name": "react-template",
-  "description": "A React template project",
+  "name": "HomeHelper",
+  "short_name": "HomeHelper",
+  "description": "Keep your child's kindergarten belongings in sync with every guardian.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#42b883",
+  "background_color": "#f6f7f2",
+  "theme_color": "#176b5b",
   "lang": "en",
   "scope": "/",
   "icons": [

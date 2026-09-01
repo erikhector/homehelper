@@ -49,15 +49,12 @@ else
             builder.UseSpaWithTransforms("wwwroot", (_, values) => { }));
 }
 
-// Remove the preprocessor directive below to enable database migrations on application startup
-#if false
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<PlaceholderContext>();
+    var context = services.GetRequiredService<HomehelperContext>();
     await context.Database.MigrateAsync();
 }
-#endif
 
 app.UseGlobalExceptionHandler(app.Environment.IsDevelopment());
 

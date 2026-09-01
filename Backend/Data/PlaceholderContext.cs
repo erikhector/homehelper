@@ -12,6 +12,9 @@ public class Placeholder
 
 public class HomehelperContext(DbContextOptions<HomehelperContext> options, DomainHandlerProvider domainHandlerProvider) : DbContext(options)
 {
+    public DbSet<Child> Children => Set<Child>();
+    public DbSet<Item> Items => Set<Item>();
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         throw new NotSupportedException("Use SaveChangesAsync instead");
@@ -64,5 +67,11 @@ public class HomehelperContext(DbContextOptions<HomehelperContext> options, Doma
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         domainHandlerProvider.RegisterQueryFilters(modelBuilder);
+        modelBuilder.Entity<Child>().Property(child => child.FirstName).HasMaxLength(100).IsRequired();
+        modelBuilder.Entity<Child>().Property(child => child.LastName).HasMaxLength(100);
+        modelBuilder.Entity<Item>().Property(item => item.Name).HasMaxLength(100).IsRequired();
+        modelBuilder.Entity<Item>().Property(item => item.Category).HasMaxLength(50).IsRequired();
+        modelBuilder.Entity<Item>().Property(item => item.Status).HasConversion<string>().HasMaxLength(30);
+        modelBuilder.Entity<Item>().HasOne(item => item.Child).WithMany(child => child.Items).HasForeignKey(item => item.ChildId).OnDelete(DeleteBehavior.Cascade);
     }
 }
