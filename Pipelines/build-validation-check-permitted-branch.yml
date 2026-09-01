@@ -1,0 +1,21 @@
+trigger: none
+
+pool: Default
+
+steps:
+  - task: PowerShell@2
+    displayName: Validate branch
+    inputs:
+      targetType: "inline"
+      script: |
+        Write-Host "Checking if $($env:target_branch) is a valid merge target for $($env:source_branch)"
+        $isFeature = $env:source_branch -like "refs/heads/feature/*"
+        $isFix = $env:source_branch -like "refs/heads/fix/*"
+        $mayMergeToMaster = $isFeature -or $isFix
+        if($env:target_branch -eq "refs/heads/master" -and (-not $mayMergeToMaster)) {
+          throw "$($env:source_branch) may not be merged to master"
+        }
+      failOnStderr: true
+    env:
+      target_branch: $(System.PullRequest.TargetBranch)
+      source_branch: $(System.PullRequest.SourceBranch)

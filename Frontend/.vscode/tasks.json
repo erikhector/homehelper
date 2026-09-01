@@ -1,0 +1,63 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "frontend-debug",
+      "type": "shell",
+      "command": "npm run dev -- -- vscodedebug",
+      "group": "build",
+      "isBackground": true,
+      "hide": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "ready in"
+        }
+      }
+    },
+    {
+      "label": "kill-debug-process",
+      "type": "process",
+      "command": ["${command:workbench.action.terminal.kill}"],
+      "hide": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend-backend",
+      "dependsOn": ["frontend", "backend"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend",
+      "type": "npm",
+      "script": "start",
+      "presentation": {
+        "reveal": "always",
+        "group": "build"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "backend",
+      "command": "dotnet",
+      "type": "shell",
+      "args": ["run", "--project", "../Backend"],
+      "presentation": {
+        "reveal": "always",
+        "group": "build"
+      },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

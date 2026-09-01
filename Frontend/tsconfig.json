@@ -1,0 +1,6 @@
+{
+  "files": [],
+  // tsconfig.app.json is the primary config for the web application
+  // tsconfig.node.json is for node the environment (e.g. build scripts, dev server)
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+}

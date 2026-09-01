@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../README.md" />
+    <File Path="../setup.ps1" />
+  </Folder>
+  <Project Path="HomeHelper.csproj" />
+</Solution>

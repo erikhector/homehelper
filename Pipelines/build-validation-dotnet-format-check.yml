@@ -1,0 +1,38 @@
+trigger: none
+
+pool: Default
+
+name: Requested by $(Build.RequestedFor)
+
+steps:
+  - task: UseDotNet@2
+    displayName: Ensure SDK
+    inputs:
+      packageType: "sdk"
+      version: "6.x"
+
+  - task: CmdLine@2
+    displayName: Ensure latest version of dotnet-format
+    inputs:
+      script: "dotnet tool update --global dotnet-format"
+    continueOnError: true
+
+  - task: CmdLine@2
+    displayName: Install dotnet-format if missing
+    condition: failed()
+    inputs:
+      script: "dotnet tool install --global dotnet-format"
+
+  - task: DotNetCoreCLI@2
+    displayName: Restore nuget
+    inputs:
+      command: "restore"
+      projects: "**/*.csproj"
+      feedsToUse: "select"
+
+  - task: CmdLine@2
+    displayName: Run dotnet-format
+    inputs:
+      script: 'dotnet-format --check -v q .\Dv.sln'
+      workingDirectory: "Backend"
+      failOnStderr: true

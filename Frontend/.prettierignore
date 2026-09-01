@@ -1,0 +1,9 @@
+# DefaultsStart
+node_modules
+dist
+public
+Backend
+src/api
+src/api-json-server
+package-lock.json
+# DefaultsEnd

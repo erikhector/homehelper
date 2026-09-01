@@ -1,0 +1,144 @@
+{
+  "folders": [
+    {
+      "path": "./Frontend"
+    },
+    {
+      "path": "./Backend"
+    },
+    {
+      "path": ".",
+      "name": "repo-root"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/node_modules": true,
+      "**/dist": false,
+      "**/package-lock.json": false,
+      "**/obj": true,
+      "**/bin": true,
+      "**/*.csproj.user": true,
+      "*.slnf": true,
+      ".vs": true,
+      "packages": true,
+      ".{prettier,stylelint}ignore": false,
+      "webpack.*.js": false,
+      "tsconfig.json": false,
+      "check-npm.ps1": false,
+      ".{prettierrc,stylelintrc.json}": false
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/package-lock.json": true,
+      "**/bin": true,
+      "**/.husky": true,
+      "**/.eslintcache": true
+    },
+    "files.associations": {
+      "*.overrides": "less",
+      "*.variables": "less",
+      ".env*": "ini",
+      "web.config": "xml",
+      "**/ci/*.yml": "azure-pipelines",
+      "**/Pipelines/*.yml": "azure-pipelines"
+    },
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/**": true,
+      "**/.hg/store/**": true,
+      "**/Backend/**": true,
+      "**/dist/**": true,
+      "**/.husky/**": true,
+      "**/.vscode/**": true
+    },
+    "typescript.tsdk": "Frontend\\node_modules\\typescript\\lib",
+    "typescript.implementationsCodeLens.enabled": true,
+    "typescript.referencesCodeLens.enabled": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.addMissingImports": "explicit"
+    },
+    "editor.codeLens": true,
+    "editor.minimap.renderCharacters": false,
+    "editor.minimap.maxColumn": 100,
+    "editor.minimap.showSlider": "always",
+    "editor.gotoLocation.multipleDefinitions": "goto",
+    "editor.gotoLocation.multipleImplementations": "goto",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[bicep]": {
+      "editor.defaultFormatter": "ms-azuretools.vscode-bicep"
+    },
+    "workbench.settings.enableNaturalLanguageSearch": false,
+    "workbench.editor.highlightModifiedTabs": true,
+    "breadcrumbs.enabled": true,
+    "explorer.autoReveal": false,
+    "scm.defaultViewMode": "tree",
+    "git.autofetch": true,
+    "todo-tree.general.rootFolder": "${workspaceFolder}/src",
+    "todo-tree.filtering.excludeGlobs": ["**/node_modules/**/*"],
+    "todo-tree.filtering.useBuiltInExcludes": "file and search excludes",
+    "vsicons.dontShowNewVersionMessage": true,
+    "css_peek.peekToExclude": [
+      "**/node_modules",
+      "**/bower_components",
+      "**/localDist",
+      "**/dist"
+    ],
+    "html-css-class-completion.excludeGlobPattern": "**/node_modules",
+    "html-css-class-completion.includeGlobPattern": "src/**/*.{css,html}",
+    "gitlens.views.repositories.files.layout": "tree",
+    "omnisharp.enableEditorConfigSupport": true,
+    "omnisharp.enableMsBuildLoadProjectsOnDemand": true,
+    "css.lint.important": "warning",
+    "scss.lint.important": "warning",
+    "editor.bracketPairColorization.enabled": true,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "explorer.fileNesting.patterns": {
+      "*.ts": "${capture}.js",
+      "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+      "*.jsx": "${capture}.js",
+      "*.tsx": "${capture}.ts",
+      "tsconfig.json": "tsconfig.*.json",
+      "package.json": "package-lock.json, yarn.lock",
+      "webpack.config.js": "webpack.*.js, webpack-dev-server.js",
+      ".stylelint*": ".stylelintignore",
+      ".env": ".env.*",
+      "eslint.config.js": "eslint.config.base.js",
+      ".prettierrc": ".prettierignore"
+    },
+    "npm.scriptExplorerExclude": [
+      "devservervscode",
+      "devserver:org",
+      "predevserver",
+      "prepare"
+    ],
+    "powershell.cwd": "repo-root"
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "stylelint.vscode-stylelint",
+      "naumovs.color-highlight",
+      "firefox-devtools.vscode-firefox-debug",
+      "dsznajder.es7-react-js-snippets",
+      "eamodio.gitlens",
+      "vscode-icons-team.vscode-icons",
+      "ms-vsliveshare.vsliveshare"
+    ]
+  }
+}

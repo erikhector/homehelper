@@ -1,0 +1,23 @@
+trigger: none
+
+pool: "Linux"
+
+steps:
+  - task: UseNode@1
+    displayName: Download Node.js
+    inputs:
+      version: "22.22.x"
+  - task: Npm@1
+    displayName: "npm ci"
+    inputs:
+      command: ci
+      workingDir: Frontend
+      verbose: false
+  - task: PowerShell@2
+    displayName: Check for unused code
+    inputs:
+      targetType: "inline"
+      script: "npm run knip"
+      failOnStderr: true
+      showWarnings: false
+      workingDirectory: "Frontend"

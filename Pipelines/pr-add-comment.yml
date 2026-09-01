@@ -1,0 +1,77 @@
+trigger: none
+
+pool: Default
+
+steps:
+  # - task: PowerShell@2
+  #   displayName: Validate branch
+  #   inputs:
+  #     targetType: "inline"
+  #     script: |
+  #       Write-Host "Checking if $($env:target_branch) is a valid merge target for $($env:source_branch)"
+  #       $isFeature = $env:source_branch -like "refs/heads/feature/*"
+  #       $isFix = $env:source_branch -like "refs/heads/fix/*"
+  #       $mayMergeToMaster = $isFeature -or $isFix
+  #       if($env:target_branch -eq "refs/heads/master" -and (-not $mayMergeToMaster)) {
+  #         throw "$($env:source_branch) may not be merged to master"
+  #       }
+  #     failOnStderr: true
+  #   env:
+  #     target_branch: $(System.PullRequest.TargetBranch)
+  #     source_branch: $(System.PullRequest.SourceBranch)
+  - task: PowerShell@2
+    inputs:
+      targetType: "inline"
+      script: |
+        $url = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$env:SYSTEM_TEAMPROJECTID/_apis/build/definitions/$($env:SYSTEM_DEFINITIONID)?api-version=5.0"
+                Write-Host "URL: $url"
+                $pipeline = Invoke-RestMethod -Uri $url -Headers @{
+                    Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+                }
+                Write-Host "Pipeline = $($pipeline | ConvertTo-Json -Depth 100)"
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  - task: PowerShell@2
+    inputs:
+      targetType: "inline"
+      script: |
+
+        # Call the Azure DevOps Services Rest API.
+        $url = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$env:SYSTEM_TEAMPROJECTID/_apis/git/repositories/$(Build.Repository.ID)/pullRequests/$(System.PullRequest.PullRequestId)?api-version=7.0"
+        $headers = @{
+          Authorization = "Bearer $(System.AccessToken)"
+        }
+        $pullRequestInfo = Invoke-RestMethod -Uri $url -Method 'GET' -ContentType 'application/json' -Headers $headers
+
+        # Get PR title and description from the json response.
+        $json = $($pullRequestInfo | ConvertTo-Json -Depth 100 | ConvertFrom-Json)
+        $description = $json.description
+        $title = $json.title
+        Write-Host $json
+        Write-Host $($pullRequestInfo | ConvertTo-Json -Depth 100)
+  - task: PowerShell@2
+    inputs:
+      targetType: "inline"
+      script: |
+
+        # Call the Azure DevOps Services Rest API.
+        $url = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$env:SYSTEM_TEAMPROJECTID/_apis/git/repositories/$(Build.Repository.ID)/pullRequests/$(System.PullRequest.PullRequestId)/threads?api-version=7.1-preview.1"
+        $headers = @{
+          Authorization = "Bearer $(System.AccessToken)"
+        }
+        $comments =
+        @([pscustomobject]@{parentCommentId=0;content="Some text";commentType=1}
+        # [pscustomobject]@{name="Sue";age=29;info="something about her"},
+        #[pscustomobject]@{name="Cat";age=12;info="something else"}
+        )
+        $body = @{
+          "status" = 1
+          # "comments" = @(
+          # {"Item1"="value1"},
+          # {"Item2"="value2"},
+          # {"Item3"="value3"})
+          "comments" = $comments
+        }
+        $pullRequestInfo = Invoke-RestMethod -Uri $url -Method 'Post' -ContentType 'application/json' -Headers $headers -Body ($body|ConvertTo-Json)
+
+        Write-Host $($pullRequestInfo | ConvertTo-Json -Depth 100)

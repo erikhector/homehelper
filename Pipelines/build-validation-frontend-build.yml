@@ -1,0 +1,21 @@
+trigger: none
+
+pool: "Linux"
+
+steps:
+  - task: UseNode@1
+    displayName: Download Node.js
+    inputs:
+      version: "22.22.x"
+  - task: Npm@1
+    displayName: "npm ci"
+    inputs:
+      command: ci
+      workingDir: Frontend
+      verbose: false
+  - task: Npm@1
+    displayName: Build frontend
+    inputs:
+      command: custom
+      workingDir: Frontend
+      customCommand: run build
