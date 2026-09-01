@@ -1,32 +1,40 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { useForm } from "react-hook-form";
 
 type AddItemDialogProps = {
-  category: string;
   isOpen: boolean;
   isPending: boolean;
-  name: string;
-  onCategoryChange: (value: string) => void;
   onClose: () => void;
-  onNameChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: (values: AddItemFormValues) => void;
 };
 
-export default function AddItemDialog({ category, isOpen, isPending, name, onCategoryChange, onClose, onNameChange, onSubmit }: AddItemDialogProps) {
+export type AddItemFormValues = { category: string; name: string };
+
+export default function AddItemDialog({ isOpen, isPending, onClose, onSubmit }: AddItemDialogProps) {
+  const { handleSubmit, register, reset } = useForm<AddItemFormValues>();
+
+  const closeDialog = () => {
+    reset();
+    onClose();
+  };
+
   return (
-    <Dialog fullWidth maxWidth="xs" open={isOpen} onClose={onClose}>
-      <DialogTitle>Add an item</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 1 }}>
-          <TextField autoFocus label="Item name" value={name} onChange={(event) => onNameChange(event.target.value)} />
-          <TextField label="Category" value={category} onChange={(event) => onCategoryChange(event.target.value)} />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button disabled={!name.trim() || !category.trim() || isPending} variant="contained" onClick={onSubmit}>
-          Add item
-        </Button>
-      </DialogActions>
+    <Dialog fullWidth maxWidth="xs" open={isOpen} onClose={closeDialog}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <DialogTitle>Lägg till sak</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField autoFocus required label="Namn" {...register("name", { required: true })} />
+            <TextField required label="Kategori" {...register("category", { required: true })} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDialog}>Avbryt</Button>
+          <Button disabled={isPending} type="submit" variant="contained">
+            {isPending ? "Lägger till..." : "Lägg till sak"}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }

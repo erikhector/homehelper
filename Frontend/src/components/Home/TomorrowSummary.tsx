@@ -1,9 +1,9 @@
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { Box, Chip, Divider, Paper, Stack, Typography } from "@mui/material";
 
-type TomorrowSummaryProps = { atKindergartenCount: number; bringTomorrowCount: number };
+type TomorrowSummaryProps = { atKindergartenCount: number; homeCount: number };
 
-export default function TomorrowSummary({ atKindergartenCount, bringTomorrowCount }: TomorrowSummaryProps) {
+export default function TomorrowSummary({ atKindergartenCount, homeCount }: TomorrowSummaryProps) {
   return (
     <Paper component="section" sx={{ bgcolor: "primary.dark", color: "common.white", mb: 3, p: { sm: 3.5, xs: 2.5 } }}>
       <Box
@@ -11,13 +11,13 @@ export default function TomorrowSummary({ atKindergartenCount, bringTomorrowCoun
       >
         <Box>
           <Typography component="h2" sx={{ fontWeight: 700 }} variant="h5">
-            Ready for tomorrow
+            Redo för i morgon
           </Typography>
-          <Typography sx={{ color: "#dcefe8", mt: 0.5 }}>A quick look at what needs to leave home.</Typography>
+          <Typography sx={{ color: "#dcefe8", mt: 0.5 }}>En snabb överblick över barnets saker.</Typography>
         </Box>
         <Chip
           icon={<Inventory2OutlinedIcon />}
-          label={`${bringTomorrowCount} things to bring`}
+          label={`${homeCount} saker hemma`}
           sx={{ bgcolor: "#dcefe8", color: "primary.dark", fontWeight: 800, px: 0.5 }}
         />
       </Box>
@@ -29,11 +29,11 @@ export default function TomorrowSummary({ atKindergartenCount, bringTomorrowCoun
       >
         <Box>
           <Typography sx={{ fontSize: "2rem", fontWeight: 800 }}>{atKindergartenCount}</Typography>
-          <Typography sx={{ color: "#dcefe8" }}>already there</Typography>
+          <Typography sx={{ color: "#dcefe8" }}>saker på förskolan</Typography>
         </Box>
         <Box>
-          <Typography sx={{ fontSize: "2rem", fontWeight: 800 }}>{bringTomorrowCount}</Typography>
-          <Typography sx={{ color: "#dcefe8" }}>to pack</Typography>
+          <Typography sx={{ fontSize: "2rem", fontWeight: 800 }}>{homeCount}</Typography>
+          <Typography sx={{ color: "#dcefe8" }}>saker hemma</Typography>
         </Box>
       </Stack>
     </Paper>

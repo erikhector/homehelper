@@ -1,17 +1,18 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
 
-type AddChildDialogProps = {
+type ProfileDialogProps = {
+  displayName: string;
   isOpen: boolean;
   isPending: boolean;
   onClose: () => void;
-  onSubmit: (values: AddChildFormValues) => void;
+  onSubmit: (values: ProfileFormValues) => void;
 };
 
-export type AddChildFormValues = { firstName: string; lastName: string };
+export type ProfileFormValues = { displayName: string };
 
-export default function AddChildDialog({ isOpen, isPending, onClose, onSubmit }: AddChildDialogProps) {
-  const { handleSubmit, register, reset } = useForm<AddChildFormValues>();
+export default function ProfileDialog({ displayName, isOpen, isPending, onClose, onSubmit }: ProfileDialogProps) {
+  const { handleSubmit, register, reset } = useForm<ProfileFormValues>({ values: { displayName } });
 
   const closeDialog = () => {
     reset();
@@ -21,17 +22,18 @@ export default function AddChildDialog({ isOpen, isPending, onClose, onSubmit }:
   return (
     <Dialog fullWidth maxWidth="xs" open={isOpen} onClose={closeDialog}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogTitle>Lägg till barn</DialogTitle>
+        <DialogTitle>Din profil</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <TextField autoFocus required label="Förnamn" {...register("firstName", { required: true })} />
-            <TextField label="Efternamn" {...register("lastName")} />
+            <TextField autoFocus required label="Visningsnamn" {...register("displayName", { required: true })} />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDialog}>Avbryt</Button>
+          <Button disabled={isPending} onClick={closeDialog}>
+            Avbryt
+          </Button>
           <Button disabled={isPending} type="submit" variant="contained">
-            {isPending ? "Lägger till..." : "Lägg till barn"}
+            {isPending ? "Sparar..." : "Spara andringar"}
           </Button>
         </DialogActions>
       </form>

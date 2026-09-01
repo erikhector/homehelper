@@ -1,15 +1,37 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Box, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Paper, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { Item } from "Src/api/Dto";
+import type { AddChildFormValues } from "Src/components/Home/AddChildDialog";
+import type { AddItemFormValues } from "Src/components/Home/AddItemDialog";
+import type { CreateItemTemplateFormValues } from "Src/components/Home/CreateItemTemplateDialog";
+import type { ShareChildFormValues } from "Src/components/Home/ShareChildDialog";
 
-import { createChild, createItem, getChildren, getItems, getItemStatuses, updateItemStatus } from "Src/api/Children";
+import { getCurrentUser } from "Src/api/Auth";
+import {
+  applyItemTemplate,
+  createChild,
+  createItem,
+  createItemTemplate,
+  deleteItem,
+  deleteItemTemplate,
+  getChildren,
+  getItems,
+  getItemTemplates,
+  shareChild,
+  updateItemQuantities
+} from "Src/api/Children";
+import { ProblemDetailsError } from "Src/api/HttpClient";
+
 import AddChildDialog from "Src/components/Home/AddChildDialog";
 import AddItemDialog from "Src/components/Home/AddItemDialog";
 import ChildDashboardHeader from "Src/components/Home/ChildDashboardHeader";
+import CreateItemTemplateDialog from "Src/components/Home/CreateItemTemplateDialog";
+import ItemTemplateControls from "Src/components/Home/ItemTemplateControls";
 import PackingList from "Src/components/Home/PackingList";
+import ShareChildDialog from "Src/components/Home/ShareChildDialog";
 import TomorrowSummary from "Src/components/Home/TomorrowSummary";
 
 export default function Index() {
@@ -17,12 +39,12 @@ export default function Index() {
   const [selectedChildId, setSelectedChildId] = useState<"" | number>("");
   const [isAddChildDialogOpen, setIsAddChildDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newChildFirstName, setNewChildFirstName] = useState("");
-  const [newChildLastName, setNewChildLastName] = useState("");
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemCategory, setNewItemCategory] = useState("");
-  const { data: children = [], error: childrenError } = useQuery({ queryFn: getChildren, queryKey: ["children"] });
-  const { data: itemStatuses = [], error: statusesError } = useQuery({ queryFn: getItemStatuses, queryKey: ["item-statuses"] });
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const { data: currentUser } = useQuery({ queryFn: getCurrentUser, queryKey: ["current-user"], retry: false });
+  const { data: children = [], error: childrenError, isLoading: isLoadingChildren } = useQuery({ queryFn: getChildren, queryKey: ["children"] });
+  const { data: itemTemplates = [], error: templatesError } = useQuery({ queryFn: getItemTemplates, queryKey: ["item-templates"] });
   const activeChildId = selectedChildId || children[0]?.childId || "";
   const { data: items = [], error: itemsError } = useQuery({
     enabled: activeChildId !== "",
@@ -33,8 +55,6 @@ export default function Index() {
     mutationFn: ({ firstName, lastName }: { firstName: string; lastName: string }) => createChild({ firstName, lastName: lastName || null }),
     onSuccess: async (child) => {
       setSelectedChildId(child.childId);
-      setNewChildFirstName("");
-      setNewChildLastName("");
       setIsAddChildDialogOpen(false);
       await queryClient.invalidateQueries({ queryKey: ["children"] });
     }
@@ -42,97 +62,202 @@ export default function Index() {
   const createItemMutation = useMutation({
     mutationFn: ({ category, childId, name }: { category: string; childId: number; name: string }) => createItem(childId, { category, name }),
     onSuccess: async (_, variables) => {
-      setNewItemName("");
-      setNewItemCategory("");
       setIsAddDialogOpen(false);
       await queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
     }
   });
-  const updateItemStatusMutation = useMutation({
-    mutationFn: ({ childId, itemId, status }: { childId: number; itemId: number; status: Item["status"] }) =>
-      updateItemStatus(childId, itemId, { status }),
+  const updateItemQuantitiesMutation = useMutation({
+    mutationFn: ({
+      childId,
+      homeQuantity,
+      itemId,
+      kindergartenQuantity
+    }: Pick<Item, "homeQuantity" | "kindergartenQuantity"> & { childId: number; itemId: number }) =>
+      updateItemQuantities(childId, itemId, { homeQuantity, kindergartenQuantity }),
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
     }
   });
+  const deleteItemMutation = useMutation({
+    mutationFn: ({ childId, itemId }: { childId: number; itemId: number }) => deleteItem(childId, itemId),
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
+    }
+  });
+  const shareChildMutation = useMutation({
+    mutationFn: ({ childId, email }: { childId: number; email: string }) => shareChild(childId, { email }),
+    onSuccess: async () => {
+      setIsShareDialogOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ["children"] });
+    }
+  });
+  const createItemTemplateMutation = useMutation({
+    mutationFn: ({ childId, name }: { childId: number; name: string }) => createItemTemplate(childId, { name }),
+    onSuccess: async () => {
+      setIsCreateTemplateDialogOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ["item-templates"] });
+    }
+  });
+  const applyItemTemplateMutation = useMutation({
+    mutationFn: ({ childId, itemTemplateId }: { childId: number; itemTemplateId: number }) => applyItemTemplate(childId, itemTemplateId),
+    onSuccess: async (_, variables) => {
+      setSelectedTemplateId("");
+      await queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
+    }
+  });
+  const deleteItemTemplateMutation = useMutation({
+    mutationFn: deleteItemTemplate,
+    onSuccess: async () => {
+      setSelectedTemplateId("");
+      await queryClient.invalidateQueries({ queryKey: ["item-templates"] });
+    }
+  });
   const selectedChild = children.find((child) => child.childId === activeChildId);
+  const selectedTemplate = itemTemplates.find((template) => template.itemTemplateId === Number(selectedTemplateId));
   const currentDate = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "long", weekday: "long" }).format(new Date()).toUpperCase();
-  const needsToBringStatus = itemStatuses.find((status) => status === "NeedsToBring");
-  const atKindergartenStatus = itemStatuses.find((status) => status === "AtKindergarten");
-  const bringTomorrow = items.filter((item) => item.status === needsToBringStatus);
-  const atKindergarten = items.filter((item) => item.status === atKindergartenStatus);
+  const homeCount = items.reduce((total, item) => total + item.homeQuantity, 0);
+  const kindergartenCount = items.reduce((total, item) => total + item.kindergartenQuantity, 0);
 
-  const cycleItemStatus = (item: Item) => {
-    if (activeChildId === "" || itemStatuses.length === 0) return;
-    const nextStatus = itemStatuses[(itemStatuses.indexOf(item.status) + 1) % itemStatuses.length]!;
-    updateItemStatusMutation.mutate({ childId: activeChildId, itemId: item.itemId, status: nextStatus });
+  const updateItemQuantitiesForChild = (item: Item, quantities: Pick<Item, "homeQuantity" | "kindergartenQuantity">) => {
+    if (activeChildId === "") return;
+    updateItemQuantitiesMutation.mutate({ childId: activeChildId, itemId: item.itemId, ...quantities });
   };
 
-  const addItem = () => {
-    const itemName = newItemName.trim();
-    const category = newItemCategory.trim();
-    if (!itemName || !category || activeChildId === "") return;
-    createItemMutation.mutate({ category, childId: activeChildId, name: itemName });
+  const removeItem = (item: Item) => {
+    if (activeChildId === "") return;
+    deleteItemMutation.mutate({ childId: activeChildId, itemId: item.itemId });
   };
 
-  const addChild = () => {
-    const firstName = newChildFirstName.trim();
-    if (!firstName) return;
-    createChildMutation.mutate({ firstName, lastName: newChildLastName.trim() });
+  const addItem = ({ category, name }: AddItemFormValues) => {
+    if (activeChildId === "") return;
+    createItemMutation.mutate({ category: category.trim(), childId: activeChildId, name: name.trim() });
   };
+
+  const addChild = ({ firstName, lastName }: AddChildFormValues) => {
+    createChildMutation.mutate({ firstName: firstName.trim(), lastName: lastName.trim() });
+  };
+
+  const shareActiveChild = ({ email }: ShareChildFormValues) => {
+    if (activeChildId === "") return;
+    shareChildMutation.mutate({ childId: activeChildId, email: email.trim() });
+  };
+
+  const saveItemTemplate = ({ name }: CreateItemTemplateFormValues) => {
+    if (activeChildId === "") return;
+    createItemTemplateMutation.mutate({ childId: activeChildId, name: name.trim() });
+  };
+
+  const applySelectedTemplate = () => {
+    if (activeChildId === "" || !selectedTemplateId) return;
+    applyItemTemplateMutation.mutate({ childId: activeChildId, itemTemplateId: Number(selectedTemplateId) });
+  };
+
+  const removeSelectedTemplate = () => {
+    if (!selectedTemplate || selectedTemplate.createdByUserId !== currentUser?.userId) return;
+    deleteItemTemplateMutation.mutate(selectedTemplate.itemTemplateId);
+  };
+
+  const shareErrorMessage =
+    shareChildMutation.error instanceof ProblemDetailsError
+      ? shareChildMutation.error.detail
+      : shareChildMutation.isError
+        ? "Det gick inte att dela barnet. Försök igen."
+        : undefined;
 
   return (
     <>
-      <Helmet title={selectedChild ? `${selectedChild.firstName}'s things` : "Your children"} />
+      <Helmet title={selectedChild ? `${selectedChild.firstName}s saker` : "Dina barn"} />
       <Box component="section" sx={{ margin: "0 auto", maxWidth: 1120, px: { sm: 4, xs: 2 }, py: { sm: 5, xs: 3 } }}>
         <ChildDashboardHeader
           activeChildId={activeChildId}
           children={children}
           currentDate={currentDate}
+          currentUserId={currentUser?.userId}
           selectedChild={selectedChild}
           onAddChild={() => setIsAddChildDialogOpen(true)}
           onSelectChild={setSelectedChildId}
+          onShareChild={() => setIsShareDialogOpen(true)}
         />
-        <TomorrowSummary atKindergartenCount={atKindergarten.length} bringTomorrowCount={bringTomorrow.length} />
-        <PackingList
-          atKindergartenStatus={atKindergartenStatus}
-          items={items}
-          needsToBringStatus={needsToBringStatus}
-          selectedChild={selectedChild}
-          onAddItem={() => setIsAddDialogOpen(true)}
-          onCycleItemStatus={cycleItemStatus}
-        />
+        {isLoadingChildren ? (
+          <Box sx={{ display: "grid", minHeight: 240, placeItems: "center" }}>
+            <CircularProgress aria-label="Laddar barn" />
+          </Box>
+        ) : (
+          <>
+            {children.length === 0 ? (
+              <Paper sx={{ mt: 2, p: { sm: 4, xs: 3 }, textAlign: "center" }} variant="outlined">
+                <Typography component="h2" variant="h6">
+                  Lägg till ditt första barn
+                </Typography>
+                <Typography color="text.secondary" sx={{ mt: 1 }}>
+                  Börja med att lägga till ett barn för att hålla koll på sakerna på förskolan.
+                </Typography>
+                <Button sx={{ mt: 2 }} variant="contained" onClick={() => setIsAddChildDialogOpen(true)}>
+                  Lägg till barn
+                </Button>
+              </Paper>
+            ) : (
+              <>
+                <ItemTemplateControls
+                  currentUserId={currentUser?.userId}
+                  isApplyingTemplate={applyItemTemplateMutation.isPending}
+                  isDeletingTemplate={deleteItemTemplateMutation.isPending}
+                  itemTemplates={itemTemplates}
+                  selectedTemplateId={selectedTemplateId}
+                  onApplyTemplate={applySelectedTemplate}
+                  onCreateTemplate={() => setIsCreateTemplateDialogOpen(true)}
+                  onDeleteTemplate={removeSelectedTemplate}
+                  onSelectTemplate={setSelectedTemplateId}
+                />
+                <TomorrowSummary atKindergartenCount={kindergartenCount} homeCount={homeCount} />
+                <PackingList
+                  isDeletingItemId={deleteItemMutation.isPending ? deleteItemMutation.variables.itemId : undefined}
+                  isUpdatingItemId={updateItemQuantitiesMutation.isPending ? updateItemQuantitiesMutation.variables.itemId : undefined}
+                  items={items}
+                  selectedChild={selectedChild}
+                  onAddItem={() => setIsAddDialogOpen(true)}
+                  onDeleteItem={removeItem}
+                  onUpdateItemQuantities={updateItemQuantitiesForChild}
+                />
+              </>
+            )}
+          </>
+        )}
 
         {(childrenError ||
-          statusesError ||
+          templatesError ||
           itemsError ||
           createChildMutation.error ||
           createItemMutation.error ||
-          updateItemStatusMutation.error) && (
+          deleteItemMutation.error ||
+          deleteItemTemplateMutation.error ||
+          updateItemQuantitiesMutation.error ||
+          createItemTemplateMutation.error ||
+          applyItemTemplateMutation.error) && (
           <Typography color="error.main" role="alert" sx={{ mt: 2 }}>
-            We could not save your changes. Please try again.
+            Det gick inte att spara ändringarna. Försök igen.
           </Typography>
         )}
       </Box>
-      <AddItemDialog
-        category={newItemCategory}
-        isOpen={isAddDialogOpen}
-        isPending={createItemMutation.isPending}
-        name={newItemName}
-        onCategoryChange={setNewItemCategory}
-        onClose={() => setIsAddDialogOpen(false)}
-        onNameChange={setNewItemName}
-        onSubmit={addItem}
-      />
+      <AddItemDialog isOpen={isAddDialogOpen} isPending={createItemMutation.isPending} onClose={() => setIsAddDialogOpen(false)} onSubmit={addItem} />
       <AddChildDialog
-        firstName={newChildFirstName}
         isOpen={isAddChildDialogOpen}
         isPending={createChildMutation.isPending}
-        lastName={newChildLastName}
         onClose={() => setIsAddChildDialogOpen(false)}
-        onFirstNameChange={setNewChildFirstName}
-        onLastNameChange={setNewChildLastName}
         onSubmit={addChild}
+      />
+      <ShareChildDialog
+        errorMessage={shareErrorMessage}
+        isOpen={isShareDialogOpen}
+        isPending={shareChildMutation.isPending}
+        onClose={() => setIsShareDialogOpen(false)}
+        onSubmit={shareActiveChild}
+      />
+      <CreateItemTemplateDialog
+        isOpen={isCreateTemplateDialogOpen}
+        isPending={createItemTemplateMutation.isPending}
+        onClose={() => setIsCreateTemplateDialogOpen(false)}
+        onSubmit={saveItemTemplate}
       />
     </>
   );

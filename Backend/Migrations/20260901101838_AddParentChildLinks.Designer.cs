@@ -4,6 +4,7 @@ using HomeHelper.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeHelper.Migrations
 {
     [DbContext(typeof(HomehelperContext))]
-    partial class HomehelperContextModelSnapshot : ModelSnapshot
+    [Migration("20260901101838_AddParentChildLinks")]
+    partial class AddParentChildLinks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,77 +63,21 @@ namespace HomeHelper.Migrations
                     b.Property<int>("ChildId")
                         .HasColumnType("int");
 
-                    b.Property<int>("HomeQuantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<int>("KindergartenQuantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("ItemId");
 
                     b.HasIndex("ChildId");
 
                     b.ToTable("Items");
-                });
-
-            modelBuilder.Entity("HomeHelper.Data.ItemTemplate", b =>
-                {
-                    b.Property<int>("ItemTemplateId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemTemplateId"));
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("ItemTemplateId");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.ToTable("ItemTemplates");
-                });
-
-            modelBuilder.Entity("HomeHelper.Data.ItemTemplateEntry", b =>
-                {
-                    b.Property<int>("ItemTemplateEntryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemTemplateEntryId"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("ItemTemplateId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("ItemTemplateEntryId");
-
-                    b.HasIndex("ItemTemplateId");
-
-                    b.ToTable("ItemTemplateEntries");
                 });
 
             modelBuilder.Entity("HomeHelper.Data.ParentChildLink", b =>
@@ -218,27 +165,6 @@ namespace HomeHelper.Migrations
                     b.Navigation("Child");
                 });
 
-            modelBuilder.Entity("HomeHelper.Data.ItemTemplate", b =>
-                {
-                    b.HasOne("HomeHelper.Data.User", "CreatedByUser")
-                        .WithMany("ItemTemplates")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("CreatedByUser");
-                });
-
-            modelBuilder.Entity("HomeHelper.Data.ItemTemplateEntry", b =>
-                {
-                    b.HasOne("HomeHelper.Data.ItemTemplate", "ItemTemplate")
-                        .WithMany("Entries")
-                        .HasForeignKey("ItemTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ItemTemplate");
-                });
-
             modelBuilder.Entity("HomeHelper.Data.ParentChildLink", b =>
                 {
                     b.HasOne("HomeHelper.Data.Child", "Child")
@@ -265,16 +191,9 @@ namespace HomeHelper.Migrations
                     b.Navigation("ParentLinks");
                 });
 
-            modelBuilder.Entity("HomeHelper.Data.ItemTemplate", b =>
-                {
-                    b.Navigation("Entries");
-                });
-
             modelBuilder.Entity("HomeHelper.Data.User", b =>
                 {
                     b.Navigation("ChildLinks");
-
-                    b.Navigation("ItemTemplates");
                 });
 #pragma warning restore 612, 618
         }

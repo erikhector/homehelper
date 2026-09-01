@@ -4,6 +4,7 @@ using HomeHelper.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeHelper.Migrations
 {
     [DbContext(typeof(HomehelperContext))]
-    partial class HomehelperContextModelSnapshot : ModelSnapshot
+    [Migration("20260901105206_AddItemQuantitiesAndTemplates")]
+    partial class AddItemQuantitiesAndTemplates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,17 +93,12 @@ namespace HomeHelper.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemTemplateId"));
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("ItemTemplateId");
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.ToTable("ItemTemplates");
                 });
@@ -218,16 +216,6 @@ namespace HomeHelper.Migrations
                     b.Navigation("Child");
                 });
 
-            modelBuilder.Entity("HomeHelper.Data.ItemTemplate", b =>
-                {
-                    b.HasOne("HomeHelper.Data.User", "CreatedByUser")
-                        .WithMany("ItemTemplates")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("CreatedByUser");
-                });
-
             modelBuilder.Entity("HomeHelper.Data.ItemTemplateEntry", b =>
                 {
                     b.HasOne("HomeHelper.Data.ItemTemplate", "ItemTemplate")
@@ -273,8 +261,6 @@ namespace HomeHelper.Migrations
             modelBuilder.Entity("HomeHelper.Data.User", b =>
                 {
                     b.Navigation("ChildLinks");
-
-                    b.Navigation("ItemTemplates");
                 });
 #pragma warning restore 612, 618
         }

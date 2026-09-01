@@ -5,6 +5,8 @@ using Dekiru.ApiUtils.Domain;
 using Dekiru.Hermes;
 using HomeHelper.Data;
 using HomeHelper.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using TypeScriptClientBuilder;
@@ -17,6 +19,20 @@ builder.Services.AddOpenApi();
 builder.Services.AddDefaultProblemDetailsProducer();
 builder.Services.AddScoped<DomainHandlerProvider>();
 builder.Services.AddHermes();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+    });
 builder.Services.AddScoped<ContextService>();
 builder.Services.AddDbContext<HomehelperContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
@@ -58,9 +74,10 @@ using (var scope = app.Services.CreateScope())
 
 app.UseGlobalExceptionHandler(app.Environment.IsDevelopment());
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Uncomment to activate authorization for all controllers
-app.MapControllers()/*.RequireAuthorization()*/;
+app.MapControllers();
 
 await app.RunAsync();

@@ -25,7 +25,11 @@ Entities (names are suggestions, adjust casing to backend conventions):
   - A Child can have multiple linked Users; a User can have multiple linked Children
   - `Owner` can invite/remove other guardians; `Guardian` has read/write access to items but cannot remove the child or other guardians
 - **Item** (a clothing item or belonging tracked for a child)
-  - Id, ChildId, Name, Category (e.g. Outerwear, Footwear, Accessories, Other), Status (`AtKindergarden` | `NeedsToBring` | `AtHome`), Notes (optional), UpdatedAt, UpdatedByUserId
+  - Id, ChildId, Name, Category (e.g. Outerwear, Footwear, Accessories, Other), HomeQuantity, KindergartenQuantity, Notes (optional), UpdatedAt, UpdatedByUserId
+- **ItemTemplate** (a reusable public packing-list template)
+  - Id, Name, Entries (Name and Category)
+  - A user can save a child’s item names/categories as a template. Templates are reusable by all users and can be applied to any child they can access.
+  - Applying a template creates child-owned items with both quantities set to `0`; subsequently changing quantities affects only that child’s items.
 - **Invitation** (for sharing a child profile with another parent)
   - Id, ChildId, InvitedByUserId, InviteeEmail, Token, Status (`Pending` | `Accepted` | `Declined` | `Expired`), CreatedAt, ExpiresAt
 
@@ -40,6 +44,16 @@ Relationships:
 - Use **Material UI (MUI)** as the component library going forward (`@mui/material`, `@mui/icons-material`, `@emotion/react`, `@emotion/styled`).
 - Prefer MUI components and `sx`/theme-based styling over hand-rolled CSS in `src/styles`; keep global CSS only for resets/base styles.
 - Define a shared MUI theme (colors, typography) in one place (e.g. `src/styles/theme.ts`) and provide it via `ThemeProvider` near the app root.
+- All user-visible UI text must be in Swedish. Keep source code identifiers, file names, and API contracts in English.
+- Use `react-hook-form` for every user-data entry form. Form field state and validation belong to the form component rather than parent UI state.
+- Clearly show when a child profile is shared, including the linked parents/guardians.
+- When the user has no children, present a clear empty state with a direct action to add their first child.
+- Item lists must support filtering by category and name and sorting by name or category.
+- Display each item’s quantities at preschool and at home prominently, with independent non-negative controls. Do not use a status cycle or binary toggle, since an item can exist in both places at once.
+- Quantity controls should use increment/decrement icon buttons instead of free-form numeric text entry.
+- Users can remove items from a child’s list, and can remove reusable item templates they created.
+- Loading indicators should appear next to the control or row the user is operating on rather than as a global page status.
+- Provide controls to save the active child’s item list as a reusable template and apply a template to the active child.
 
 ## Frontend Data Fetching
 

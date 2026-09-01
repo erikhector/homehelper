@@ -8,14 +8,14 @@ export default function ErrorBoundary({ children }: PropsWithChildren) {
       render={({ closeError, DevExtraInfo, errorMessage, hasError: _ }) => {
         return (
           <div>
-            <p>An error has occurred</p>
+            <p>Ett fel har uppstått</p>
             <div>
-              Error message:
+              Felmeddelande:
               <br />
               {errorMessage}
             </div>
             <button type="button" onClick={closeError}>
-              Try again
+              Försök igen
             </button>
             {import.meta.env.MODE === "development" && <DevExtraInfo />}
           </div>

@@ -6,8 +6,7 @@
 * AND ANY CHANGES WILL BE OVERWRITTEN      *
 \******************************************/
 
-export enum ItemStatus {
-    AtKindergarten = 0,
-    NeedsToBring = 1,
-    AtHome = 2,
+export enum ParentChildRole {
+    Owner = 0,
+    Guardian = 1,
 }
