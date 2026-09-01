@@ -1,5 +1,6 @@
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import { Avatar, Box, Button, Chip, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
+import { Avatar, Box, Button, Chip, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Tooltip, Typography } from "@mui/material";
 
 import type { Child } from "Src/api/Dto";
 
@@ -11,6 +12,7 @@ interface ChildDashboardHeaderProps {
   currentDate: string;
   currentUserId: number | undefined;
   onAddChild: () => void;
+  onManageChild: () => void;
   onSelectChild: (childId: "" | number) => void;
   onShareChild: () => void;
   selectedChild: Child | undefined;
@@ -22,6 +24,7 @@ export default function ChildDashboardHeader({
   currentDate,
   currentUserId,
   onAddChild,
+  onManageChild,
   onSelectChild,
   onShareChild,
   selectedChild
@@ -30,6 +33,7 @@ export default function ChildDashboardHeader({
   const otherParentLinks = parentLinks.filter((link) => link.userId !== currentUserId);
   const visibleParentLinks = otherParentLinks.length > 0 ? otherParentLinks : parentLinks;
   const isSharedChild = parentLinks.length > 1;
+  const isOwner = parentLinks.some((link) => link.userId === currentUserId && link.role === ParentChildRole.Owner);
 
   return (
     <Box
@@ -39,7 +43,7 @@ export default function ChildDashboardHeader({
         flexDirection: { sm: "row", xs: "column" },
         gap: 2,
         justifyContent: "space-between",
-        mb: 4
+        mb: 2.5
       }}
     >
       <Box>
@@ -91,10 +95,17 @@ export default function ChildDashboardHeader({
         <Button variant="outlined" onClick={onAddChild}>
           Lägg till barn
         </Button>
-        {selectedChild && (
+        {selectedChild && isOwner && (
           <Button variant="outlined" onClick={onShareChild}>
             Dela
           </Button>
+        )}
+        {selectedChild && (
+          <Tooltip title="Hantera åtkomst">
+            <IconButton aria-label="Hantera åtkomst" onClick={onManageChild}>
+              <ManageAccountsRoundedIcon />
+            </IconButton>
+          </Tooltip>
         )}
       </Stack>
     </Box>

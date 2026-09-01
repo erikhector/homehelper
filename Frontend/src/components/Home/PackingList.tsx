@@ -63,7 +63,7 @@ export default function PackingList({
         </Button>
       </Box>
       <Paper component="section" variant="outlined">
-        <Stack direction={{ sm: "row", xs: "column" }} spacing={1.5} sx={{ p: 2 }}>
+        <Stack direction={{ sm: "row", xs: "column" }} spacing={1} sx={{ p: 1.5 }}>
           <TextField label="Sok pa namn" size="small" value={nameFilter} onChange={(event) => setNameFilter(event.target.value)} />
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel id="category-filter-label">Kategori</InputLabel>
@@ -110,9 +110,9 @@ export default function PackingList({
                   alignItems: { sm: "center" },
                   display: "flex",
                   flexDirection: { sm: "row", xs: "column" },
-                  gap: 1.5,
+                  gap: 1,
                   px: { sm: 2, xs: 1.5 },
-                  py: 1.5
+                  py: 1
                 }}
               >
                 <Avatar
@@ -129,8 +129,10 @@ export default function PackingList({
                     {item.category}
                   </Typography>
                 </Box>
-                <Stack direction={{ sm: "row", xs: "column" }} spacing={1} sx={{ alignItems: { sm: "center" }, width: { sm: "auto", xs: "100%" } }}>
-                  <Box sx={{ alignItems: "center", display: "flex", gap: 0.75 }}>
+                <Stack direction={{ sm: "row", xs: "column" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, width: { sm: "auto", xs: "100%" } }}>
+                  <Box
+                    sx={{ alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1, display: "flex", gap: 0.5, px: 0.5, py: 0.25 }}
+                  >
                     <Typography color="text.secondary" sx={{ minWidth: 74 }} variant="body2">
                       Förskolan
                     </Typography>
@@ -154,7 +156,9 @@ export default function PackingList({
                       <AddRoundedIcon fontSize="small" />
                     </IconButton>
                   </Box>
-                  <Box sx={{ alignItems: "center", display: "flex", gap: 0.75 }}>
+                  <Box
+                    sx={{ alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1, display: "flex", gap: 0.5, px: 0.5, py: 0.25 }}
+                  >
                     <Typography color="text.secondary" sx={{ minWidth: 74 }} variant="body2">
                       Hemma
                     </Typography>
@@ -183,7 +187,7 @@ export default function PackingList({
                   {isUpdatingItem && <CircularProgress aria-label="Sparar antal" size={22} />}
                   {!isUpdatingItem && (
                     <Tooltip title="Ta bort sak">
-                      <IconButton aria-label={`Ta bort ${item.name}`} disabled={isDeletingItem} onClick={() => onDeleteItem(item)}>
+                      <IconButton aria-label={`Ta bort ${item.name}`} color="error" disabled={isDeletingItem} onClick={() => onDeleteItem(item)}>
                         {isDeletingItem ? <CircularProgress aria-label="Tar bort sak" size={22} /> : <DeleteRoundedIcon />}
                       </IconButton>
                     </Tooltip>

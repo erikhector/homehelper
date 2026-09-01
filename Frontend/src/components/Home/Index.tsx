@@ -15,11 +15,13 @@ import {
   createChild,
   createItem,
   createItemTemplate,
+  deleteChild,
   deleteItem,
   deleteItemTemplate,
   getChildren,
   getItems,
   getItemTemplates,
+  revokeChildAccess,
   shareChild,
   updateItemQuantities
 } from "Src/api/Children";
@@ -30,6 +32,7 @@ import AddItemDialog from "Src/components/Home/AddItemDialog";
 import ChildDashboardHeader from "Src/components/Home/ChildDashboardHeader";
 import CreateItemTemplateDialog from "Src/components/Home/CreateItemTemplateDialog";
 import ItemTemplateControls from "Src/components/Home/ItemTemplateControls";
+import ManageChildAccessDialog from "Src/components/Home/ManageChildAccessDialog";
 import PackingList from "Src/components/Home/PackingList";
 import ShareChildDialog from "Src/components/Home/ShareChildDialog";
 import TomorrowSummary from "Src/components/Home/TomorrowSummary";
@@ -40,6 +43,7 @@ export default function Index() {
   const [isAddChildDialogOpen, setIsAddChildDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isManageAccessDialogOpen, setIsManageAccessDialogOpen] = useState(false);
   const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const { data: currentUser } = useQuery({ queryFn: getCurrentUser, queryKey: ["current-user"], retry: false });
@@ -84,6 +88,22 @@ export default function Index() {
       await queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
     }
   });
+  const deleteChildMutation = useMutation({
+    mutationFn: deleteChild,
+    onSuccess: async () => {
+      setSelectedChildId("");
+      setIsManageAccessDialogOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ["children"] });
+    }
+  });
+  const revokeChildAccessMutation = useMutation({
+    mutationFn: ({ childId, parentUserId }: { childId: number; parentUserId: number }) => revokeChildAccess(childId, parentUserId),
+    onSuccess: async (_, variables) => {
+      if (variables.parentUserId === currentUser?.userId) setSelectedChildId("");
+      setIsManageAccessDialogOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ["children"] });
+    }
+  });
   const shareChildMutation = useMutation({
     mutationFn: ({ childId, email }: { childId: number; email: string }) => shareChild(childId, { email }),
     onSuccess: async () => {
@@ -126,6 +146,16 @@ export default function Index() {
   const removeItem = (item: Item) => {
     if (activeChildId === "") return;
     deleteItemMutation.mutate({ childId: activeChildId, itemId: item.itemId });
+  };
+
+  const deleteActiveChild = () => {
+    if (activeChildId === "") return;
+    deleteChildMutation.mutate(activeChildId);
+  };
+
+  const revokeAccess = (parentUserId: number) => {
+    if (activeChildId === "") return;
+    revokeChildAccessMutation.mutate({ childId: activeChildId, parentUserId });
   };
 
   const addItem = ({ category, name }: AddItemFormValues) => {
@@ -175,6 +205,7 @@ export default function Index() {
           currentUserId={currentUser?.userId}
           selectedChild={selectedChild}
           onAddChild={() => setIsAddChildDialogOpen(true)}
+          onManageChild={() => setIsManageAccessDialogOpen(true)}
           onSelectChild={setSelectedChildId}
           onShareChild={() => setIsShareDialogOpen(true)}
         />
@@ -230,7 +261,9 @@ export default function Index() {
           createChildMutation.error ||
           createItemMutation.error ||
           deleteItemMutation.error ||
+          deleteChildMutation.error ||
           deleteItemTemplateMutation.error ||
+          revokeChildAccessMutation.error ||
           updateItemQuantitiesMutation.error ||
           createItemTemplateMutation.error ||
           applyItemTemplateMutation.error) && (
@@ -252,6 +285,19 @@ export default function Index() {
         isPending={shareChildMutation.isPending}
         onClose={() => setIsShareDialogOpen(false)}
         onSubmit={shareActiveChild}
+      />
+      <ManageChildAccessDialog
+        child={selectedChild}
+        currentUserId={currentUser?.userId}
+        errorMessage={
+          deleteChildMutation.isError || revokeChildAccessMutation.isError ? "Det gick inte att ändra åtkomsten. Försök igen." : undefined
+        }
+        isDeletingChild={deleteChildMutation.isPending}
+        isOpen={isManageAccessDialogOpen}
+        isRevokingParentUserId={revokeChildAccessMutation.isPending ? revokeChildAccessMutation.variables.parentUserId : undefined}
+        onClose={() => setIsManageAccessDialogOpen(false)}
+        onDeleteChild={deleteActiveChild}
+        onRevokeAccess={revokeAccess}
       />
       <CreateItemTemplateDialog
         isOpen={isCreateTemplateDialogOpen}

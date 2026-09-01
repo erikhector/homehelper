@@ -55,6 +55,19 @@ export const createItemTemplate = async (childId: number, request: DTO.CreateIte
     return _client.httpFetch<DTO.ItemTemplate>('POST', path.join(""), request);
 };
 
+export const deleteChild = async (childId: number): Promise<any> => {
+    const path = [_client.resolveUrl(`/api/children/${childId}`)];
+    const _queryParameters: string[] = [];
+    if(childId !== null && childId !== undefined) {
+        _queryParameters.push(`childId=${encodeURIComponent(childId)}`);
+    }
+    if(_queryParameters.length > 0) {
+        path.push("?");
+        path.push(_queryParameters.join("&"));
+    }
+    return _client.httpFetch<any>('DELETE', path.join(""));
+};
+
 export const deleteItem = async (childId: number, itemId: number): Promise<any> => {
     const path = [_client.resolveUrl(`/api/children/${childId}/items/${itemId}`)];
     const _queryParameters: string[] = [];
@@ -103,6 +116,22 @@ export const getItems = async (childId: number): Promise<DTO.Item[]> => {
 
 export const getItemTemplates = async (): Promise<DTO.ItemTemplate[]> => {
     return _client.httpFetch<DTO.ItemTemplate[]>('GET', _client.resolveUrl(`/api/children/item-templates`));
+};
+
+export const revokeChildAccess = async (childId: number, parentUserId: number): Promise<any> => {
+    const path = [_client.resolveUrl(`/api/children/${childId}/parents/${parentUserId}`)];
+    const _queryParameters: string[] = [];
+    if(childId !== null && childId !== undefined) {
+        _queryParameters.push(`childId=${encodeURIComponent(childId)}`);
+    }
+    if(parentUserId !== null && parentUserId !== undefined) {
+        _queryParameters.push(`parentUserId=${encodeURIComponent(parentUserId)}`);
+    }
+    if(_queryParameters.length > 0) {
+        path.push("?");
+        path.push(_queryParameters.join("&"));
+    }
+    return _client.httpFetch<any>('DELETE', path.join(""));
 };
 
 export const shareChild = async (childId: number, request: DTO.ShareChildRequest): Promise<any> => {

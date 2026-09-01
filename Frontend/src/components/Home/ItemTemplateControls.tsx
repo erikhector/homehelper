@@ -30,7 +30,7 @@ export default function ItemTemplateControls({
   const canDeleteSelectedTemplate = Boolean(selectedTemplate?.createdByUserId && selectedTemplate.createdByUserId === currentUserId);
 
   return (
-    <Stack direction={{ sm: "row", xs: "column" }} spacing={1.5} sx={{ mb: 3 }}>
+    <Stack direction={{ sm: "row", xs: "column" }} spacing={1} sx={{ mb: 2 }}>
       <FormControl fullWidth size="small">
         <InputLabel id="template-select-label">Använd mall</InputLabel>
         <Select
@@ -51,7 +51,12 @@ export default function ItemTemplateControls({
       </Button>
       <Tooltip title={canDeleteSelectedTemplate ? "Ta bort mall" : "Du kan bara ta bort mallar som du har skapat"}>
         <span>
-          <IconButton aria-label="Ta bort vald mall" disabled={!canDeleteSelectedTemplate || isDeletingTemplate} onClick={onDeleteTemplate}>
+          <IconButton
+            aria-label="Ta bort vald mall"
+            color="error"
+            disabled={!canDeleteSelectedTemplate || isDeletingTemplate}
+            onClick={onDeleteTemplate}
+          >
             {isDeletingTemplate ? <CircularProgress aria-label="Tar bort mall" size={20} /> : <DeleteRoundedIcon />}
           </IconButton>
         </span>

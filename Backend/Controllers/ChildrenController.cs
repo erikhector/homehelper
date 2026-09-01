@@ -39,6 +39,21 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         return CreatedAtAction(nameof(GetChildren), new { childId = child.ChildId }, child);
     }
 
+    [HttpDelete("{childId:int}")]
+    public async Task<ActionResult> DeleteChild(int childId, CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var child = await context.Children.SingleOrDefaultAsync(child => child.ChildId == childId, cancellationToken);
+        var isOwner = await context.ParentChildLinks.AnyAsync(
+            link => link.ChildId == childId && link.UserId == userId && link.Role == ParentChildRole.Owner,
+            cancellationToken);
+        if (child is null || !isOwner) return NotFound();
+
+        context.Children.Remove(child);
+        await context.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet("{childId:int}/items")]
     public async Task<ActionResult<List<Item>>> GetItems(int childId, CancellationToken cancellationToken)
     {
@@ -147,6 +162,27 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         if (alreadyLinked) return Conflict(new { detail = "This parent already has access to the child." });
 
         context.ParentChildLinks.Add(new ParentChildLink { ChildId = childId, UserId = parent.UserId, Role = ParentChildRole.Guardian, CreatedAt = DateTimeOffset.UtcNow });
+        await context.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{childId:int}/parents/{parentUserId:int}")]
+    public async Task<ActionResult> RevokeChildAccess(int childId, int parentUserId, CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var link = await context.ParentChildLinks.SingleOrDefaultAsync(
+            parentLink => parentLink.ChildId == childId && parentLink.UserId == parentUserId,
+            cancellationToken);
+        if (link is null) return NotFound();
+
+        var isOwner = await context.ParentChildLinks.AnyAsync(
+            parentLink => parentLink.ChildId == childId && parentLink.UserId == userId && parentLink.Role == ParentChildRole.Owner,
+            cancellationToken);
+        var isRevokingOwnGuardianAccess = parentUserId == userId && link.Role == ParentChildRole.Guardian;
+        if (!isOwner && !isRevokingOwnGuardianAccess) return NotFound();
+        if (link.Role == ParentChildRole.Owner) return Conflict(new { detail = "The child owner cannot be removed." });
+
+        context.ParentChildLinks.Remove(link);
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
