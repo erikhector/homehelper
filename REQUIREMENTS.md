@@ -25,11 +25,12 @@ Entities (names are suggestions, adjust casing to backend conventions):
   - A Child can have multiple linked Users; a User can have multiple linked Children
   - `Owner` can invite/remove other guardians; `Guardian` has read/write access to items but cannot remove the child or other guardians
 - **Item** (a clothing item or belonging tracked for a child)
-  - Id, ChildId, Name, Category (e.g. Outerwear, Footwear, Accessories, Other), HomeQuantity, KindergartenQuantity, Notes (optional), UpdatedAt, UpdatedByUserId
+  - Id, ChildId, Name, Category (e.g. Outerwear, Footwear, Accessories, Other), KindergartenQuantity, Notes (optional), UpdatedAt, UpdatedByUserId
 - **ItemTemplate** (a reusable public packing-list template)
-  - Id, Name, Entries (Name and Category)
-  - A user can save a child’s item names/categories as a template. Templates are reusable by all users and can be applied to any child they can access.
-  - Applying a template creates child-owned items with both quantities set to `0`; subsequently changing quantities affects only that child’s items.
+  - Id, ChildId, Name, Entries (Name, Category, Quantity)
+  - Each child can have multiple named templates. Templates belong to that child and can be created, updated, and deleted by a parent with child access.
+  - A child has at most one active template. Activating a template replaces the child's tracked item list with its entries at a kindergarten quantity of `0`.
+  - Items created manually remain supported and have no template target quantity.
 - **Invitation** (for sharing a child profile with another parent)
   - Id, ChildId, InvitedByUserId, InviteeEmail, Token, Status (`Pending` | `Accepted` | `Declined` | `Expired`), CreatedAt, ExpiresAt
 
@@ -49,11 +50,11 @@ Relationships:
 - Clearly show when a child profile is shared, including the linked parents/guardians.
 - When the user has no children, present a clear empty state with a direct action to add their first child.
 - Item lists must support filtering by category and name and sorting by name or category.
-- Display each item’s quantities at preschool and at home prominently, with independent non-negative controls. Do not use a status cycle or binary toggle, since an item can exist in both places at once.
+- Display each item’s quantity at preschool prominently with a non-negative increment/decrement control. For template items, calculate the indicator from the difference between the target and actual preschool quantity: shortages of two or more are red, a shortage of one is yellow, and a fulfilled target is green. Name shortages in a prominent "Ta med till förskolan" summary.
 - Quantity controls should use increment/decrement icon buttons instead of free-form numeric text entry.
-- Users can remove items from a child’s list, and can remove reusable item templates they created.
+- Users can remove items from a child’s list and manage that child's templates on a dedicated page.
 - Loading indicators should appear next to the control or row the user is operating on rather than as a global page status.
-- Provide controls to save the active child’s item list as a reusable template and apply a template to the active child.
+- Provide a dedicated page to create, update, and delete the active child's named templates, including item name, category, and target quantity. Provide an active-template selector from the child dashboard.
 
 ## Frontend Data Fetching
 

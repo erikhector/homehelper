@@ -1,12 +1,13 @@
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import { Box, Chip, Divider, Paper, Stack, Typography } from "@mui/material";
+import { Alert, Box, Divider, Paper, Stack, Typography } from "@mui/material";
+
+import type { Item } from "Src/api/Dto";
 
 interface TomorrowSummaryProps {
   atKindergartenCount: number;
-  homeCount: number;
+  missingItems: Item[];
 }
 
-export default function TomorrowSummary({ atKindergartenCount, homeCount }: TomorrowSummaryProps) {
+export default function TomorrowSummary({ atKindergartenCount, missingItems }: TomorrowSummaryProps) {
   return (
     <Paper component="section" sx={{ bgcolor: "primary.dark", color: "primary.contrastText", mb: 3, p: { sm: 3.5, xs: 2.5 } }}>
       <Box
@@ -18,12 +19,13 @@ export default function TomorrowSummary({ atKindergartenCount, homeCount }: Tomo
           </Typography>
           <Typography sx={{ color: "inherit", mt: 0.5, opacity: 0.78 }}>En snabb överblick över barnets saker.</Typography>
         </Box>
-        <Chip
-          icon={<Inventory2OutlinedIcon />}
-          label={`${homeCount} saker hemma`}
-          sx={{ bgcolor: "background.paper", color: "text.primary", fontWeight: 800, px: 0.5 }}
-        />
       </Box>
+      {missingItems.length > 0 && (
+        <Alert severity="error" sx={{ mt: 2 }} variant="filled">
+          Ta med till förskolan:{" "}
+          {missingItems.map((item) => `${item.name} (${item.itemTemplateEntry!.quantity - item.kindergartenQuantity})`).join(", ")}
+        </Alert>
+      )}
       <Stack
         direction={{ sm: "row", xs: "column" }}
         divider={<Divider flexItem orientation="vertical" sx={{ borderColor: "currentColor", opacity: 0.24 }} />}
@@ -35,8 +37,8 @@ export default function TomorrowSummary({ atKindergartenCount, homeCount }: Tomo
           <Typography sx={{ color: "inherit", opacity: 0.78 }}>saker på förskolan</Typography>
         </Box>
         <Box>
-          <Typography sx={{ fontSize: "2rem", fontWeight: 800 }}>{homeCount}</Typography>
-          <Typography sx={{ color: "inherit", opacity: 0.78 }}>saker hemma</Typography>
+          <Typography sx={{ fontSize: "2rem", fontWeight: 800 }}>{missingItems.length}</Typography>
+          <Typography sx={{ color: "inherit", opacity: 0.78 }}>saker att ta med</Typography>
         </Box>
       </Stack>
     </Paper>

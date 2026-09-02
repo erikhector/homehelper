@@ -3,6 +3,8 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
   Avatar,
   Box,
@@ -32,6 +34,12 @@ interface PackingListProps {
   selectedChild: Child | undefined;
 }
 
+const inventoryStatuses = {
+  low: { color: "warning", label: "Behöver fyllas på" },
+  missing: { color: "error", label: "Saknas - ta med till förskolan" },
+  sufficient: { color: "success", label: "Tillräckligt på förskolan" }
+} as const;
+
 export default function PackingList({
   isDeletingItemId,
   isUpdatingItemId,
@@ -41,6 +49,7 @@ export default function PackingList({
   onUpdateItemQuantities,
   selectedChild
 }: PackingListProps) {
+  const theme = useTheme();
   const [categoryFilter, setCategoryFilter] = useState("");
   const [nameFilter, setNameFilter] = useState("");
   const [sortOrder, setSortOrder] = useState<"category" | "name">("name");
@@ -98,13 +107,17 @@ export default function PackingList({
           const isDeletingItem = item.itemId === isDeletingItemId;
           const isUpdatingItem = item.itemId === isUpdatingItemId;
           const isOperatingOnItem = isDeletingItem || isUpdatingItem;
+          const targetQuantity = item.itemTemplateEntry?.quantity ?? 0;
+          const missingQuantity = targetQuantity - item.kindergartenQuantity;
+          let stockStatusKey: keyof typeof inventoryStatuses = "sufficient";
+          if (missingQuantity > 1) stockStatusKey = "missing";
+          if (missingQuantity === 1) stockStatusKey = "low";
+          const stockStatus = inventoryStatuses[stockStatusKey];
           const updateKindergartenQuantity = (kindergartenQuantity: number) =>
             onUpdateItemQuantities(item, { homeQuantity: item.homeQuantity, kindergartenQuantity });
-          const updateHomeQuantity = (homeQuantity: number) =>
-            onUpdateItemQuantities(item, { homeQuantity, kindergartenQuantity: item.kindergartenQuantity });
 
           return (
-            <Box key={item.itemId}>
+            <Box key={item.itemId} sx={{ bgcolor: alpha(theme.palette[stockStatus.color].main, 0.16) }}>
               <Box
                 sx={{
                   alignItems: { sm: "center" },
@@ -117,16 +130,16 @@ export default function PackingList({
               >
                 <Avatar
                   sx={{
-                    bgcolor: item.homeQuantity > 0 ? "#fff1d9" : "primary.light",
-                    color: item.homeQuantity > 0 ? "warning.main" : "primary.dark"
+                    bgcolor: `${stockStatus.color}.main`,
+                    color: `${stockStatus.color}.contrastText`
                   }}
                 >
-                  <CheckCircleRoundedIcon />
+                  {stockStatusKey === "low" ? <WarningAmberRoundedIcon /> : <CheckCircleRoundedIcon />}
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography sx={{ fontWeight: 700 }}>{item.name}</Typography>
                   <Typography color="text.secondary" variant="body2">
-                    {item.category}
+                    {item.category} - {stockStatus.label}
                   </Typography>
                 </Box>
                 <Stack direction={{ sm: "row", xs: "column" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, width: { sm: "auto", xs: "100%" } }}>
@@ -134,7 +147,7 @@ export default function PackingList({
                     sx={{ alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1, display: "flex", gap: 0.5, px: 0.5, py: 0.25 }}
                   >
                     <Typography color="text.secondary" sx={{ minWidth: 74 }} variant="body2">
-                      Förskolan
+                      Förskolan {item.kindergartenQuantity}/{targetQuantity}
                     </Typography>
                     <IconButton
                       aria-label={`Minska ${item.name} på förskolan`}
@@ -152,32 +165,6 @@ export default function PackingList({
                       disabled={isOperatingOnItem}
                       size="small"
                       onClick={() => updateKindergartenQuantity(item.kindergartenQuantity + 1)}
-                    >
-                      <AddRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                  <Box
-                    sx={{ alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1, display: "flex", gap: 0.5, px: 0.5, py: 0.25 }}
-                  >
-                    <Typography color="text.secondary" sx={{ minWidth: 74 }} variant="body2">
-                      Hemma
-                    </Typography>
-                    <IconButton
-                      aria-label={`Minska ${item.name} hemma`}
-                      disabled={isOperatingOnItem || item.homeQuantity === 0}
-                      size="small"
-                      onClick={() => updateHomeQuantity(item.homeQuantity - 1)}
-                    >
-                      <RemoveRoundedIcon fontSize="small" />
-                    </IconButton>
-                    <Typography aria-label={`${item.homeQuantity} hemma`} sx={{ fontWeight: 700, minWidth: 24, textAlign: "center" }}>
-                      {item.homeQuantity}
-                    </Typography>
-                    <IconButton
-                      aria-label={`Öka ${item.name} hemma`}
-                      disabled={isOperatingOnItem}
-                      size="small"
-                      onClick={() => updateHomeQuantity(item.homeQuantity + 1)}
                     >
                       <AddRoundedIcon fontSize="small" />
                     </IconButton>

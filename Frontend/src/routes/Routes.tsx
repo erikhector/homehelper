@@ -9,6 +9,7 @@ import Landing from "Src/components/Landing/Index";
 import Layout from "Src/components/Layout";
 import Login from "Src/components/Login/Index";
 import Signup from "Src/components/Signup/Index";
+import Templates from "Src/components/Templates/Index";
 
 export const routes: RouteObject[] = [
   {
@@ -21,6 +22,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <Landing /> },
       { path: "children", element: <Home /> },
+      { path: "templates", element: <Templates /> },
       { path: "login", element: <Login /> },
       { path: "signup", element: <Signup /> },
       { path: "*", element: <Error404 /> },

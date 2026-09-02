@@ -8,49 +8,37 @@ import TomorrowSummary from "Src/components/Home/TomorrowSummary";
 
 interface HomeDashboardContentProps {
   childProfiles: Child[];
-  currentUserId: number | undefined;
-  isApplyingTemplate: boolean;
+  isActivatingTemplate: boolean;
   isDeletingItemId: number | undefined;
-  isDeletingTemplate: boolean;
   isLoadingChildren: boolean;
   isUpdatingItemId: number | undefined;
   items: Item[];
   itemTemplates: ItemTemplate[];
   onAddChild: () => void;
   onAddItem: () => void;
-  onApplyTemplate: () => void;
-  onCreateTemplate: () => void;
+  onActivateTemplate: (templateId: number) => void;
   onDeleteItem: (item: Item) => void;
-  onDeleteTemplate: () => void;
-  onSelectTemplate: (templateId: string) => void;
   onUpdateItemQuantities: (item: Item, quantities: Pick<Item, "homeQuantity" | "kindergartenQuantity">) => void;
   selectedChild: Child | undefined;
-  selectedTemplateId: string;
 }
 
 export default function HomeDashboardContent({
   childProfiles,
-  currentUserId,
-  isApplyingTemplate,
+  isActivatingTemplate,
   isDeletingItemId,
-  isDeletingTemplate,
   isLoadingChildren,
   isUpdatingItemId,
   items,
   itemTemplates,
   onAddChild,
   onAddItem,
-  onApplyTemplate,
-  onCreateTemplate,
+  onActivateTemplate,
   onDeleteItem,
-  onDeleteTemplate,
-  onSelectTemplate,
   onUpdateItemQuantities,
-  selectedChild,
-  selectedTemplateId
+  selectedChild
 }: HomeDashboardContentProps) {
-  const homeCount = items.reduce((total, item) => total + item.homeQuantity, 0);
   const kindergartenCount = items.reduce((total, item) => total + item.kindergartenQuantity, 0);
+  const missingItems = items.filter((item) => (item.itemTemplateEntry?.quantity ?? 0) > item.kindergartenQuantity);
 
   if (isLoadingChildren) {
     return (
@@ -79,17 +67,12 @@ export default function HomeDashboardContent({
   return (
     <>
       <ItemTemplateControls
-        currentUserId={currentUserId}
-        isApplyingTemplate={isApplyingTemplate}
-        isDeletingTemplate={isDeletingTemplate}
+        activeItemTemplateId={selectedChild?.activeItemTemplateId}
+        isActivatingTemplate={isActivatingTemplate}
         itemTemplates={itemTemplates}
-        selectedTemplateId={selectedTemplateId}
-        onApplyTemplate={onApplyTemplate}
-        onCreateTemplate={onCreateTemplate}
-        onDeleteTemplate={onDeleteTemplate}
-        onSelectTemplate={onSelectTemplate}
+        onActivateTemplate={onActivateTemplate}
       />
-      <TomorrowSummary atKindergartenCount={kindergartenCount} homeCount={homeCount} />
+      <TomorrowSummary atKindergartenCount={kindergartenCount} missingItems={missingItems} />
       <PackingList
         isDeletingItemId={isDeletingItemId}
         isUpdatingItemId={isUpdatingItemId}

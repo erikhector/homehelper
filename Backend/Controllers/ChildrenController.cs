@@ -9,7 +9,8 @@ namespace HomeHelper.Controllers;
 public record CreateChildRequest(string FirstName, string? LastName);
 public record CreateItemRequest(string Name, string Category);
 public record UpdateItemQuantitiesRequest(int HomeQuantity, int KindergartenQuantity);
-public record CreateItemTemplateRequest(string Name);
+public record ItemTemplateEntryRequest(string Name, string Category, int Quantity);
+public record SaveItemTemplateRequest(string Name, List<ItemTemplateEntryRequest> Entries);
 public record ShareChildRequest(string Email);
 
 [Route("api/children")]
@@ -49,6 +50,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
             cancellationToken);
         if (child is null || !isOwner) return NotFound();
 
+        context.ItemTemplates.RemoveRange(context.ItemTemplates.Where(template => template.ChildId == childId));
         context.Children.Remove(child);
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
@@ -59,7 +61,8 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     {
         if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
 
-        return await context.Set<Item>().AsNoTracking().Where(item => item.ChildId == childId).OrderBy(item => item.Name).ToListAsync(cancellationToken);
+        return await context.Set<Item>().AsNoTracking().Include(item => item.ItemTemplateEntry)
+            .Where(item => item.ChildId == childId).OrderBy(item => item.Name).ToListAsync(cancellationToken);
     }
 
     [HttpPost("{childId:int}/items")]
@@ -101,48 +104,96 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         return Ok(item);
     }
 
-    [HttpGet("item-templates")]
-    public async Task<ActionResult<List<ItemTemplate>>> GetItemTemplates(CancellationToken cancellationToken)
-    {
-        return await context.ItemTemplates.AsNoTracking().Include(template => template.Entries).OrderBy(template => template.Name).ToListAsync(cancellationToken);
-    }
-
-    [HttpPost("{childId:int}/item-templates")]
-    public async Task<ActionResult<ItemTemplate>> CreateItemTemplate(int childId, CreateItemTemplateRequest request, CancellationToken cancellationToken)
+    [HttpGet("{childId:int}/item-templates")]
+    public async Task<ActionResult<List<ItemTemplate>>> GetItemTemplates(int childId, CancellationToken cancellationToken)
     {
         if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
 
-        var entries = await context.Items.AsNoTracking().Where(item => item.ChildId == childId)
-            .Select(item => new ItemTemplateEntry { Name = item.Name, Category = item.Category }).ToListAsync(cancellationToken);
-        var template = new ItemTemplate { Name = request.Name.Trim(), CreatedByUserId = GetUserId(), Entries = entries };
-        context.ItemTemplates.Add(template);
-        await context.SaveChangesAsync(cancellationToken);
-        return CreatedAtAction(nameof(GetItemTemplates), template);
+        return await context.ItemTemplates.AsNoTracking().Include(template => template.Entries)
+            .Where(template => template.ChildId == childId).OrderBy(template => template.Name).ToListAsync(cancellationToken);
     }
 
-    [HttpDelete("item-templates/{itemTemplateId:int}")]
-    public async Task<ActionResult> DeleteItemTemplate(int itemTemplateId, CancellationToken cancellationToken)
+    [HttpPost("{childId:int}/item-templates")]
+    public async Task<ActionResult<ItemTemplate>> CreateItemTemplate(int childId, SaveItemTemplateRequest request, CancellationToken cancellationToken)
     {
-        var userId = GetUserId();
-        var template = await context.ItemTemplates.SingleOrDefaultAsync(template => template.ItemTemplateId == itemTemplateId, cancellationToken);
-        if (template is null || template.CreatedByUserId != userId) return NotFound();
+        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        if (!IsValidTemplate(request)) return BadRequest();
+
+        var template = new ItemTemplate { ChildId = childId, Name = request.Name.Trim(), Entries = CreateTemplateEntries(request.Entries) };
+        context.ItemTemplates.Add(template);
+        await context.SaveChangesAsync(cancellationToken);
+        return CreatedAtAction(nameof(GetItemTemplates), new { childId }, template);
+    }
+
+    [HttpPut("{childId:int}/item-templates/{itemTemplateId:int}")]
+    public async Task<ActionResult<ItemTemplate>> UpdateItemTemplate(int childId, int itemTemplateId, SaveItemTemplateRequest request, CancellationToken cancellationToken)
+    {
+        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        if (!IsValidTemplate(request)) return BadRequest();
+
+        var template = await context.ItemTemplates.Include(itemTemplate => itemTemplate.Entries)
+            .SingleOrDefaultAsync(itemTemplate => itemTemplate.ChildId == childId && itemTemplate.ItemTemplateId == itemTemplateId, cancellationToken);
+        if (template is null) return NotFound();
+
+        template.Name = request.Name.Trim();
+        context.ItemTemplateEntries.RemoveRange(template.Entries);
+        template.Entries = CreateTemplateEntries(request.Entries);
+        await context.SaveChangesAsync(cancellationToken);
+
+        var child = await context.Children.SingleAsync(itemChild => itemChild.ChildId == childId, cancellationToken);
+        if (child.ActiveItemTemplateId == template.ItemTemplateId)
+        {
+            var existingItems = await context.Items.Where(item => item.ChildId == childId).ToListAsync(cancellationToken);
+            context.Items.RemoveRange(existingItems);
+            context.Items.AddRange(template.Entries.Select(entry => new Item
+            {
+                ChildId = childId,
+                ItemTemplateEntryId = entry.ItemTemplateEntryId,
+                Name = entry.Name,
+                Category = entry.Category
+            }));
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        return Ok(template);
+    }
+
+    [HttpDelete("{childId:int}/item-templates/{itemTemplateId:int}")]
+    public async Task<ActionResult> DeleteItemTemplate(int childId, int itemTemplateId, CancellationToken cancellationToken)
+    {
+        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+
+        var template = await context.ItemTemplates.SingleOrDefaultAsync(
+            itemTemplate => itemTemplate.ChildId == childId && itemTemplate.ItemTemplateId == itemTemplateId,
+            cancellationToken);
+        if (template is null) return NotFound();
 
         context.ItemTemplates.Remove(template);
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
 
-    [HttpPost("{childId:int}/item-templates/{itemTemplateId:int}/apply")]
-    public async Task<ActionResult<List<Item>>> ApplyItemTemplate(int childId, int itemTemplateId, CancellationToken cancellationToken)
+    [HttpPost("{childId:int}/item-templates/{itemTemplateId:int}/activate")]
+    public async Task<ActionResult<List<Item>>> ActivateItemTemplate(int childId, int itemTemplateId, CancellationToken cancellationToken)
     {
         if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
 
-        var template = await context.ItemTemplates.AsNoTracking().Include(itemTemplate => itemTemplate.Entries)
-            .SingleOrDefaultAsync(itemTemplate => itemTemplate.ItemTemplateId == itemTemplateId, cancellationToken);
+        var template = await context.ItemTemplates.Include(itemTemplate => itemTemplate.Entries)
+            .SingleOrDefaultAsync(itemTemplate => itemTemplate.ChildId == childId && itemTemplate.ItemTemplateId == itemTemplateId, cancellationToken);
         if (template is null) return NotFound();
 
-        var items = template.Entries.Select(entry => new Item { ChildId = childId, Name = entry.Name, Category = entry.Category }).ToList();
+        var existingItems = await context.Items.Where(item => item.ChildId == childId).ToListAsync(cancellationToken);
+        context.Items.RemoveRange(existingItems);
+        var items = template.Entries.Select(entry => new Item
+        {
+            ChildId = childId,
+            ItemTemplateEntryId = entry.ItemTemplateEntryId,
+            Name = entry.Name,
+            Category = entry.Category
+        }).ToList();
         context.Items.AddRange(items);
+        var child = await context.Children.SingleAsync(itemChild => itemChild.ChildId == childId, cancellationToken);
+        child.ActiveItemTemplateId = template.ItemTemplateId;
         await context.SaveChangesAsync(cancellationToken);
         return Ok(items);
     }
@@ -191,4 +242,16 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
 
     private Task<bool> HasChildAccess(int childId, CancellationToken cancellationToken) =>
         context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == GetUserId(), cancellationToken);
+
+    private static bool IsValidTemplate(SaveItemTemplateRequest request) =>
+        !string.IsNullOrWhiteSpace(request.Name) && request.Entries.Count > 0 && request.Entries.All(entry =>
+            !string.IsNullOrWhiteSpace(entry.Name) && !string.IsNullOrWhiteSpace(entry.Category) && entry.Quantity >= 0);
+
+    private static List<ItemTemplateEntry> CreateTemplateEntries(IEnumerable<ItemTemplateEntryRequest> entries) =>
+        entries.Select(entry => new ItemTemplateEntry
+        {
+            Name = entry.Name.Trim(),
+            Category = entry.Category.Trim(),
+            Quantity = entry.Quantity
+        }).ToList();
 }

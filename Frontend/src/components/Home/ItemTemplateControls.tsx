@@ -1,44 +1,35 @@
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import { Button, CircularProgress, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Tooltip } from "@mui/material";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import { Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, Stack } from "@mui/material";
+import { Link } from "react-router";
 
 import type { ItemTemplate } from "Src/api/Dto";
 
 interface ItemTemplateControlsProps {
-  currentUserId: number | undefined;
-  isApplyingTemplate: boolean;
-  isDeletingTemplate: boolean;
+  activeItemTemplateId: number | null | undefined;
+  isActivatingTemplate: boolean;
   itemTemplates: ItemTemplate[];
-  onApplyTemplate: () => void;
-  onCreateTemplate: () => void;
-  onDeleteTemplate: () => void;
-  onSelectTemplate: (templateId: string) => void;
-  selectedTemplateId: string;
+  onActivateTemplate: (templateId: number) => void;
 }
 
 export default function ItemTemplateControls({
-  currentUserId,
-  isApplyingTemplate,
-  isDeletingTemplate,
+  activeItemTemplateId,
+  isActivatingTemplate,
   itemTemplates,
-  onApplyTemplate,
-  onCreateTemplate,
-  onDeleteTemplate,
-  onSelectTemplate,
-  selectedTemplateId
+  onActivateTemplate
 }: ItemTemplateControlsProps) {
-  const selectedTemplate = itemTemplates.find((template) => template.itemTemplateId === Number(selectedTemplateId));
-  const canDeleteSelectedTemplate = Boolean(selectedTemplate?.createdByUserId && selectedTemplate.createdByUserId === currentUserId);
-
   return (
     <Stack direction={{ sm: "row", xs: "column" }} spacing={1} sx={{ mb: 2 }}>
       <FormControl fullWidth size="small">
-        <InputLabel id="template-select-label">Använd mall</InputLabel>
+        <InputLabel id="template-select-label">Aktiv mall</InputLabel>
         <Select
-          label="Använd mall"
+          label="Aktiv mall"
           labelId="template-select-label"
-          value={selectedTemplateId}
-          onChange={(event) => onSelectTemplate(event.target.value)}
+          value={activeItemTemplateId ?? ""}
+          onChange={(event) => onActivateTemplate(Number(event.target.value))}
         >
+          <MenuItem disabled value="">
+            Välj mall
+          </MenuItem>
           {itemTemplates.map((template) => (
             <MenuItem key={template.itemTemplateId} value={template.itemTemplateId}>
               {template.name}
@@ -46,23 +37,9 @@ export default function ItemTemplateControls({
           ))}
         </Select>
       </FormControl>
-      <Button disabled={!selectedTemplateId || isApplyingTemplate} variant="outlined" onClick={onApplyTemplate}>
-        {isApplyingTemplate ? <CircularProgress aria-label="Använder mall" size={20} /> : "Använd mall"}
-      </Button>
-      <Tooltip title={canDeleteSelectedTemplate ? "Ta bort mall" : "Du kan bara ta bort mallar som du har skapat"}>
-        <span>
-          <IconButton
-            aria-label="Ta bort vald mall"
-            color="error"
-            disabled={!canDeleteSelectedTemplate || isDeletingTemplate}
-            onClick={onDeleteTemplate}
-          >
-            {isDeletingTemplate ? <CircularProgress aria-label="Tar bort mall" size={20} /> : <DeleteRoundedIcon />}
-          </IconButton>
-        </span>
-      </Tooltip>
-      <Button variant="outlined" onClick={onCreateTemplate}>
-        Spara som mall
+      {isActivatingTemplate && <CircularProgress aria-label="Byter aktiv mall" size={24} />}
+      <Button component={Link} startIcon={<SettingsRoundedIcon />} to="/templates" variant="outlined">
+        Hantera mallar
       </Button>
     </Stack>
   );

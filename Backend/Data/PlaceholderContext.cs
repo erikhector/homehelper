@@ -20,7 +20,6 @@ public class User
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? LastLoginAt { get; set; }
     public ICollection<ParentChildLink> ChildLinks { get; set; } = new List<ParentChildLink>();
-    public ICollection<ItemTemplate> ItemTemplates { get; set; } = new List<ItemTemplate>();
 }
 
 public class HomehelperContext(DbContextOptions<HomehelperContext> options, DomainHandlerProvider domainHandlerProvider) : DbContext(options)
@@ -96,10 +95,13 @@ public class HomehelperContext(DbContextOptions<HomehelperContext> options, Doma
         modelBuilder.Entity<Item>().Property(item => item.HomeQuantity).HasDefaultValue(0);
         modelBuilder.Entity<Item>().Property(item => item.KindergartenQuantity).HasDefaultValue(0);
         modelBuilder.Entity<Item>().HasOne(item => item.Child).WithMany(child => child.Items).HasForeignKey(item => item.ChildId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Item>().HasOne(item => item.ItemTemplateEntry).WithMany(entry => entry.Items).HasForeignKey(item => item.ItemTemplateEntryId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<ItemTemplate>().Property(template => template.Name).HasMaxLength(100).IsRequired();
-        modelBuilder.Entity<ItemTemplate>().HasOne(template => template.CreatedByUser).WithMany(user => user.ItemTemplates).HasForeignKey(template => template.CreatedByUserId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<ItemTemplate>().HasOne(template => template.Child).WithMany(child => child.ItemTemplates).HasForeignKey(template => template.ChildId).OnDelete(DeleteBehavior.NoAction);
+        modelBuilder.Entity<Child>().HasOne(child => child.ActiveItemTemplate).WithMany().HasForeignKey(child => child.ActiveItemTemplateId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<ItemTemplateEntry>().Property(entry => entry.Name).HasMaxLength(100).IsRequired();
         modelBuilder.Entity<ItemTemplateEntry>().Property(entry => entry.Category).HasMaxLength(50).IsRequired();
+        modelBuilder.Entity<ItemTemplateEntry>().Property(entry => entry.Quantity).HasDefaultValue(0);
         modelBuilder.Entity<ItemTemplateEntry>().HasOne(entry => entry.ItemTemplate).WithMany(template => template.Entries).HasForeignKey(entry => entry.ItemTemplateId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<ParentChildLink>().HasIndex(link => new { link.UserId, link.ChildId }).IsUnique();
         modelBuilder.Entity<ParentChildLink>().Property(link => link.Role).HasConversion<string>().HasMaxLength(20).IsRequired();

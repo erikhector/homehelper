@@ -4,13 +4,11 @@ import type { Item } from "Src/api/Dto";
 
 import { getCurrentUser } from "Src/api/Auth";
 import {
-  applyItemTemplate,
+  activateItemTemplate,
   createChild,
   createItem,
-  createItemTemplate,
   deleteChild,
   deleteItem,
-  deleteItemTemplate,
   getChildren,
   getItems,
   getItemTemplates,
@@ -23,8 +21,12 @@ export default function useHomeDashboard(selectedChildId: "" | number) {
   const queryClient = useQueryClient();
   const currentUserQuery = useQuery({ queryFn: getCurrentUser, queryKey: ["current-user"], retry: false });
   const childrenQuery = useQuery({ queryFn: getChildren, queryKey: ["children"] });
-  const itemTemplatesQuery = useQuery({ queryFn: getItemTemplates, queryKey: ["item-templates"] });
   const activeChildId: "" | number = selectedChildId || childrenQuery.data?.[0]?.childId || "";
+  const itemTemplatesQuery = useQuery({
+    enabled: activeChildId !== "",
+    queryFn: () => getItemTemplates(activeChildId as number),
+    queryKey: ["children", activeChildId, "item-templates"]
+  });
   const itemsQuery = useQuery({
     enabled: activeChildId !== "",
     queryFn: () => getItems(activeChildId as number),
@@ -64,30 +66,23 @@ export default function useHomeDashboard(selectedChildId: "" | number) {
     mutationFn: ({ childId, email }: { childId: number; email: string }) => shareChild(childId, { email }),
     onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["children"] })
   });
-  const createItemTemplateMutation = useMutation({
-    mutationFn: ({ childId, name }: { childId: number; name: string }) => createItemTemplate(childId, { name }),
-    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["item-templates"] })
-  });
-  const applyItemTemplateMutation = useMutation({
-    mutationFn: ({ childId, itemTemplateId }: { childId: number; itemTemplateId: number }) => applyItemTemplate(childId, itemTemplateId),
-    onSuccess: async (_, variables) => queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] })
-  });
-  const deleteItemTemplateMutation = useMutation({
-    mutationFn: deleteItemTemplate,
-    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["item-templates"] })
+  const activateItemTemplateMutation = useMutation({
+    mutationFn: ({ childId, itemTemplateId }: { childId: number; itemTemplateId: number }) => activateItemTemplate(childId, itemTemplateId),
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ["children"] });
+      await queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
+    }
   });
 
   return {
     activeChildId,
-    applyItemTemplateMutation,
+    activateItemTemplateMutation,
     childrenQuery,
     createChildMutation,
     createItemMutation,
-    createItemTemplateMutation,
     currentUserQuery,
     deleteChildMutation,
     deleteItemMutation,
-    deleteItemTemplateMutation,
     itemsQuery,
     itemTemplatesQuery,
     revokeChildAccessMutation,

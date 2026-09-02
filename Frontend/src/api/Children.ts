@@ -9,8 +9,8 @@
 import _client from "./HttpClient";
 import * as DTO from "./Dto";
 
-export const applyItemTemplate = async (childId: number, itemTemplateId: number): Promise<DTO.Item[]> => {
-    const path = [_client.resolveUrl(`/api/children/${childId}/item-templates/${itemTemplateId}/apply`)];
+export const activateItemTemplate = async (childId: number, itemTemplateId: number): Promise<DTO.Item[]> => {
+    const path = [_client.resolveUrl(`/api/children/${childId}/item-templates/${itemTemplateId}/activate`)];
     const _queryParameters: string[] = [];
     if(childId !== null && childId !== undefined) {
         _queryParameters.push(`childId=${encodeURIComponent(childId)}`);
@@ -42,7 +42,7 @@ export const createItem = async (childId: number, request: DTO.CreateItemRequest
     return _client.httpFetch<DTO.Item>('POST', path.join(""), request);
 };
 
-export const createItemTemplate = async (childId: number, request: DTO.CreateItemTemplateRequest): Promise<DTO.ItemTemplate> => {
+export const createItemTemplate = async (childId: number, request: DTO.SaveItemTemplateRequest): Promise<DTO.ItemTemplate> => {
     const path = [_client.resolveUrl(`/api/children/${childId}/item-templates`)];
     const _queryParameters: string[] = [];
     if(childId !== null && childId !== undefined) {
@@ -84,9 +84,12 @@ export const deleteItem = async (childId: number, itemId: number): Promise<any> 
     return _client.httpFetch<any>('DELETE', path.join(""));
 };
 
-export const deleteItemTemplate = async (itemTemplateId: number): Promise<any> => {
-    const path = [_client.resolveUrl(`/api/children/item-templates/${itemTemplateId}`)];
+export const deleteItemTemplate = async (childId: number, itemTemplateId: number): Promise<any> => {
+    const path = [_client.resolveUrl(`/api/children/${childId}/item-templates/${itemTemplateId}`)];
     const _queryParameters: string[] = [];
+    if(childId !== null && childId !== undefined) {
+        _queryParameters.push(`childId=${encodeURIComponent(childId)}`);
+    }
     if(itemTemplateId !== null && itemTemplateId !== undefined) {
         _queryParameters.push(`itemTemplateId=${encodeURIComponent(itemTemplateId)}`);
     }
@@ -114,8 +117,17 @@ export const getItems = async (childId: number): Promise<DTO.Item[]> => {
     return _client.httpFetch<DTO.Item[]>('GET', path.join(""));
 };
 
-export const getItemTemplates = async (): Promise<DTO.ItemTemplate[]> => {
-    return _client.httpFetch<DTO.ItemTemplate[]>('GET', _client.resolveUrl(`/api/children/item-templates`));
+export const getItemTemplates = async (childId: number): Promise<DTO.ItemTemplate[]> => {
+    const path = [_client.resolveUrl(`/api/children/${childId}/item-templates`)];
+    const _queryParameters: string[] = [];
+    if(childId !== null && childId !== undefined) {
+        _queryParameters.push(`childId=${encodeURIComponent(childId)}`);
+    }
+    if(_queryParameters.length > 0) {
+        path.push("?");
+        path.push(_queryParameters.join("&"));
+    }
+    return _client.httpFetch<DTO.ItemTemplate[]>('GET', path.join(""));
 };
 
 export const revokeChildAccess = async (childId: number, parentUserId: number): Promise<any> => {
@@ -161,4 +173,20 @@ export const updateItemQuantities = async (childId: number, itemId: number, requ
         path.push(_queryParameters.join("&"));
     }
     return _client.httpFetch<DTO.Item>('PUT', path.join(""), request);
+};
+
+export const updateItemTemplate = async (childId: number, itemTemplateId: number, request: DTO.SaveItemTemplateRequest): Promise<DTO.ItemTemplate> => {
+    const path = [_client.resolveUrl(`/api/children/${childId}/item-templates/${itemTemplateId}`)];
+    const _queryParameters: string[] = [];
+    if(childId !== null && childId !== undefined) {
+        _queryParameters.push(`childId=${encodeURIComponent(childId)}`);
+    }
+    if(itemTemplateId !== null && itemTemplateId !== undefined) {
+        _queryParameters.push(`itemTemplateId=${encodeURIComponent(itemTemplateId)}`);
+    }
+    if(_queryParameters.length > 0) {
+        path.push("?");
+        path.push(_queryParameters.join("&"));
+    }
+    return _client.httpFetch<DTO.ItemTemplate>('PUT', path.join(""), request);
 };
