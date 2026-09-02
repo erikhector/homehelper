@@ -23,10 +23,29 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     {
         var userId = GetUserId();
         return await context.Children.AsNoTracking()
-            .Include(child => child.ParentLinks)
-            .ThenInclude(link => link.User)
             .Where(child => child.ParentLinks.Any(link => link.UserId == userId))
             .OrderBy(child => child.FirstName)
+            .Select(child => new Child
+            {
+                ActiveItemTemplateId = child.ActiveItemTemplateId,
+                ChildId = child.ChildId,
+                FirstName = child.FirstName,
+                LastName = child.LastName,
+                ParentLinks = child.ParentLinks.Select(link => new ParentChildLink
+                {
+                    ChildId = link.ChildId,
+                    CreatedAt = link.CreatedAt,
+                    ParentChildLinkId = link.ParentChildLinkId,
+                    Role = link.Role,
+                    UserId = link.UserId,
+                    User = new User
+                    {
+                        DisplayName = link.User.DisplayName,
+                        Email = link.User.Email,
+                        UserId = link.User.UserId
+                    }
+                }).ToList()
+            })
             .ToListAsync(cancellationToken);
     }
 
@@ -44,31 +63,55 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     public async Task<ActionResult> DeleteChild(int childId, CancellationToken cancellationToken)
     {
         var userId = GetUserId();
-        var child = await context.Children.SingleOrDefaultAsync(child => child.ChildId == childId, cancellationToken);
         var isOwner = await context.ParentChildLinks.AnyAsync(
             link => link.ChildId == childId && link.UserId == userId && link.Role == ParentChildRole.Owner,
             cancellationToken);
-        if (child is null || !isOwner) return NotFound();
+        if (!isOwner) return NotFound();
 
-        context.ItemTemplates.RemoveRange(context.ItemTemplates.Where(template => template.ChildId == childId));
-        context.Children.Remove(child);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.ItemTemplates.Where(template => template.ChildId == childId).ExecuteDeleteAsync(cancellationToken);
+        var deletedChildren = await context.Children.Where(child => child.ChildId == childId).ExecuteDeleteAsync(cancellationToken);
+        if (deletedChildren == 0) return NotFound();
+
         return NoContent();
     }
 
     [HttpGet("{childId:int}/items")]
     public async Task<ActionResult<List<Item>>> GetItems(int childId, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
 
-        return await context.Set<Item>().AsNoTracking().Include(item => item.ItemTemplateEntry)
-            .Where(item => item.ChildId == childId).OrderBy(item => item.Name).ToListAsync(cancellationToken);
+        return await context.Items.AsNoTracking()
+            .Where(item => item.ChildId == childId)
+            .OrderBy(item => item.Name)
+            .Select(item => new Item
+            {
+                Category = item.Category,
+                ChildId = item.ChildId,
+                HomeQuantity = item.HomeQuantity,
+                ItemId = item.ItemId,
+                ItemTemplateEntryId = item.ItemTemplateEntryId,
+                KindergartenQuantity = item.KindergartenQuantity,
+                Name = item.Name,
+                ItemTemplateEntry = item.ItemTemplateEntry == null
+                    ? null
+                    : new ItemTemplateEntry
+                    {
+                        Category = item.ItemTemplateEntry.Category,
+                        ItemTemplateEntryId = item.ItemTemplateEntry.ItemTemplateEntryId,
+                        ItemTemplateId = item.ItemTemplateEntry.ItemTemplateId,
+                        Name = item.ItemTemplateEntry.Name,
+                        Quantity = item.ItemTemplateEntry.Quantity
+                    }
+            })
+            .ToListAsync(cancellationToken);
     }
 
     [HttpPost("{childId:int}/items")]
     public async Task<ActionResult<Item>> CreateItem(int childId, CreateItemRequest request, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
 
         var item = new Item { ChildId = childId, Name = request.Name.Trim(), Category = request.Category.Trim() };
         context.Add(item);
@@ -79,20 +122,20 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     [HttpDelete("{childId:int}/items/{itemId:int}")]
     public async Task<ActionResult> DeleteItem(int childId, int itemId, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
 
-        var item = await context.Items.SingleOrDefaultAsync(item => item.ChildId == childId && item.ItemId == itemId, cancellationToken);
-        if (item is null) return NotFound();
+        var deletedItems = await context.Items.Where(item => item.ChildId == childId && item.ItemId == itemId).ExecuteDeleteAsync(cancellationToken);
+        if (deletedItems == 0) return NotFound();
 
-        context.Items.Remove(item);
-        await context.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
 
     [HttpPut("{childId:int}/items/{itemId:int}/quantities")]
     public async Task<ActionResult<Item>> UpdateItemQuantities(int childId, int itemId, UpdateItemQuantitiesRequest request, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
         if (request.HomeQuantity < 0 || request.KindergartenQuantity < 0) return BadRequest();
 
         var item = await context.Set<Item>().SingleOrDefaultAsync(item => item.ChildId == childId && item.ItemId == itemId, cancellationToken);
@@ -107,16 +150,34 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     [HttpGet("{childId:int}/item-templates")]
     public async Task<ActionResult<List<ItemTemplate>>> GetItemTemplates(int childId, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
 
-        return await context.ItemTemplates.AsNoTracking().Include(template => template.Entries)
-            .Where(template => template.ChildId == childId).OrderBy(template => template.Name).ToListAsync(cancellationToken);
+        return await context.ItemTemplates.AsNoTracking()
+            .Where(template => template.ChildId == childId)
+            .OrderBy(template => template.Name)
+            .Select(template => new ItemTemplate
+            {
+                ChildId = template.ChildId,
+                Entries = template.Entries.Select(entry => new ItemTemplateEntry
+                {
+                    Category = entry.Category,
+                    ItemTemplateEntryId = entry.ItemTemplateEntryId,
+                    ItemTemplateId = entry.ItemTemplateId,
+                    Name = entry.Name,
+                    Quantity = entry.Quantity
+                }).ToList(),
+                ItemTemplateId = template.ItemTemplateId,
+                Name = template.Name
+            })
+            .ToListAsync(cancellationToken);
     }
 
     [HttpPost("{childId:int}/item-templates")]
     public async Task<ActionResult<ItemTemplate>> CreateItemTemplate(int childId, SaveItemTemplateRequest request, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
         if (!IsValidTemplate(request)) return BadRequest();
 
         var template = new ItemTemplate { ChildId = childId, Name = request.Name.Trim(), Entries = CreateTemplateEntries(request.Entries) };
@@ -128,7 +189,8 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     [HttpPut("{childId:int}/item-templates/{itemTemplateId:int}")]
     public async Task<ActionResult<ItemTemplate>> UpdateItemTemplate(int childId, int itemTemplateId, SaveItemTemplateRequest request, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
         if (!IsValidTemplate(request)) return BadRequest();
 
         var template = await context.ItemTemplates.Include(itemTemplate => itemTemplate.Entries)
@@ -143,8 +205,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         var child = await context.Children.SingleAsync(itemChild => itemChild.ChildId == childId, cancellationToken);
         if (child.ActiveItemTemplateId == template.ItemTemplateId)
         {
-            var existingItems = await context.Items.Where(item => item.ChildId == childId).ToListAsync(cancellationToken);
-            context.Items.RemoveRange(existingItems);
+            await context.Items.Where(item => item.ChildId == childId).ExecuteDeleteAsync(cancellationToken);
             context.Items.AddRange(template.Entries.Select(entry => new Item
             {
                 ChildId = childId,
@@ -161,29 +222,28 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     [HttpDelete("{childId:int}/item-templates/{itemTemplateId:int}")]
     public async Task<ActionResult> DeleteItemTemplate(int childId, int itemTemplateId, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
 
-        var template = await context.ItemTemplates.SingleOrDefaultAsync(
-            itemTemplate => itemTemplate.ChildId == childId && itemTemplate.ItemTemplateId == itemTemplateId,
-            cancellationToken);
-        if (template is null) return NotFound();
+        var deletedTemplates = await context.ItemTemplates
+            .Where(itemTemplate => itemTemplate.ChildId == childId && itemTemplate.ItemTemplateId == itemTemplateId)
+            .ExecuteDeleteAsync(cancellationToken);
+        if (deletedTemplates == 0) return NotFound();
 
-        context.ItemTemplates.Remove(template);
-        await context.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
 
     [HttpPost("{childId:int}/item-templates/{itemTemplateId:int}/activate")]
     public async Task<ActionResult<List<Item>>> ActivateItemTemplate(int childId, int itemTemplateId, CancellationToken cancellationToken)
     {
-        if (!await HasChildAccess(childId, cancellationToken)) return NotFound();
+        var userId = GetUserId();
+        if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
 
         var template = await context.ItemTemplates.Include(itemTemplate => itemTemplate.Entries)
             .SingleOrDefaultAsync(itemTemplate => itemTemplate.ChildId == childId && itemTemplate.ItemTemplateId == itemTemplateId, cancellationToken);
         if (template is null) return NotFound();
 
-        var existingItems = await context.Items.Where(item => item.ChildId == childId).ToListAsync(cancellationToken);
-        context.Items.RemoveRange(existingItems);
+        await context.Items.Where(item => item.ChildId == childId).ExecuteDeleteAsync(cancellationToken);
         var items = template.Entries.Select(entry => new Item
         {
             ChildId = childId,
@@ -240,8 +300,8 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
 
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    private Task<bool> HasChildAccess(int childId, CancellationToken cancellationToken) =>
-        context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == GetUserId(), cancellationToken);
+    private Task<bool> HasChildAccess(int childId, int userId, CancellationToken cancellationToken) =>
+        context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == userId, cancellationToken);
 
     private static bool IsValidTemplate(SaveItemTemplateRequest request) =>
         !string.IsNullOrWhiteSpace(request.Name) && request.Entries.Count > 0 && request.Entries.All(entry =>
