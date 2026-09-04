@@ -9,8 +9,8 @@
 import * as Enums from "./Enums";
 export interface AuthenticatedUserResponse {
     displayName: string;
-    email: string;
     userId: number;
+    username: string;
 }
 export interface Child {
     activeItemTemplate: (ItemTemplate | null);
@@ -30,8 +30,8 @@ export interface ChildShareInvite {
     createdAt: string;
     invitedByUser: User;
     invitedByUserId: number;
-    invitedEmail: string;
-    normalizedInvitedEmail: string;
+    invitedUsername: string;
+    normalizedInvitedUsername: string;
     respondedAt: string | null;
     status: Enums.ChildShareInviteStatus;
 }
@@ -76,8 +76,8 @@ export interface ItemTemplateEntryRequest {
     quantity: number;
 }
 export interface LoginRequest {
-    email: string;
     password: string;
+    username: string;
 }
 export interface ParentChildLink {
     child: Child;
@@ -97,15 +97,15 @@ export interface PlaceholderCreate {
 }
 export interface RegisterRequest {
     displayName: string;
-    email: string;
     password: string;
+    username: string;
 }
 export interface SaveItemTemplateRequest {
     entries: ItemTemplateEntryRequest[];
     name: string;
 }
 export interface ShareChildRequest {
-    email: string;
+    username: string;
 }
 export interface UpdateDisplayNameRequest {
     displayName: string;
@@ -118,9 +118,9 @@ export interface User {
     childLinks: ParentChildLink[];
     createdAt: string;
     displayName: string;
-    email: string;
     lastLoginAt: string | null;
-    normalizedEmail: string;
+    normalizedUsername: string;
     passwordHash: string;
     userId: number;
+    username: string;
 }

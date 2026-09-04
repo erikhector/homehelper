@@ -76,7 +76,7 @@ export default function useHomeDashboard(selectedChildId: "" | number) {
     }
   });
   const shareChildMutation = useMutation({
-    mutationFn: ({ childId, email }: { childId: number; email: string }) => shareChild(childId, { email }),
+    mutationFn: ({ childId, username }: { childId: number; username: string }) => shareChild(childId, { username }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["children"] });
     }

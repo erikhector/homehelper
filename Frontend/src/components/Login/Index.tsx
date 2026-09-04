@@ -8,7 +8,7 @@ import { login } from "Src/api/Auth";
 import { ProblemDetailsError } from "Src/api/HttpClient";
 
 interface LoginFormValues {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -25,8 +25,8 @@ export default function Index() {
   });
   const errorMessage = loginMutation.error instanceof ProblemDetailsError ? loginMutation.error.detail : "Det gick inte att logga in. Försök igen.";
 
-  const submitLogin = ({ email, password }: LoginFormValues) => {
-    loginMutation.mutate({ email, password });
+  const submitLogin = ({ username, password }: LoginFormValues) => {
+    loginMutation.mutate({ username, password });
   };
 
   return (
@@ -41,7 +41,7 @@ export default function Index() {
         </Typography>
         <Stack spacing={2} sx={{ mt: 3 }}>
           {loginMutation.isError && <Alert severity="error">{errorMessage}</Alert>}
-          <TextField required autoComplete="email" label="E-post" type="email" {...register("email", { required: true })} />
+          <TextField required autoComplete="username" label="Användarnamn" {...register("username", { required: true })} />
           <TextField required autoComplete="current-password" label="Lösenord" type="password" {...register("password", { required: true })} />
           <Button disabled={loginMutation.isPending} type="submit" variant="contained">
             {loginMutation.isPending ? "Loggar in..." : "Logga in"}

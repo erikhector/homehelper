@@ -10,9 +10,9 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace HomeHelper.Controllers;
 
-public record RegisterRequest(string DisplayName, string Email, string Password);
-public record LoginRequest(string Email, string Password);
-public record AuthenticatedUserResponse(int UserId, string DisplayName, string Email);
+public record RegisterRequest(string DisplayName, string Username, string Password);
+public record LoginRequest(string Username, string Password);
+public record AuthenticatedUserResponse(int UserId, string DisplayName, string Username);
 public record UpdateDisplayNameRequest(string DisplayName);
 
 [Route("api/auth")]
@@ -26,15 +26,15 @@ public class AuthController(HomehelperContext context, IPasswordHasher<User> pas
     public async Task<ActionResult<AuthenticatedUserResponse>> Register(RegisterRequest request, CancellationToken cancellationToken)
     {
         var displayName = request.DisplayName.Trim();
-        var email = request.Email.Trim();
-        var normalizedEmail = email.ToUpperInvariant();
-        if (string.IsNullOrWhiteSpace(displayName) || string.IsNullOrWhiteSpace(email) || request.Password.Length < 8)
-            return BadRequest(new { detail = "Enter a name, valid email, and password with at least 8 characters." });
+        var username = request.Username.Trim();
+        var normalizedUsername = username.ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(displayName) || string.IsNullOrWhiteSpace(username) || request.Password.Length < 8)
+            return BadRequest(new { detail = "Enter a name, username, and password with at least 8 characters." });
 
-        if (await context.Users.AnyAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken))
-            return Conflict(new { detail = "An account with this email already exists." });
+        if (await context.Users.AnyAsync(user => user.NormalizedUsername == normalizedUsername, cancellationToken))
+            return Conflict(new { detail = "An account with this username already exists." });
 
-        var user = new User { DisplayName = displayName, Email = email, NormalizedEmail = normalizedEmail, CreatedAt = DateTimeOffset.UtcNow };
+        var user = new User { DisplayName = displayName, Username = username, NormalizedUsername = normalizedUsername, CreatedAt = DateTimeOffset.UtcNow };
         user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
         context.Users.Add(user);
         await context.SaveChangesAsync(cancellationToken);
@@ -45,16 +45,16 @@ public class AuthController(HomehelperContext context, IPasswordHasher<User> pas
     [HttpPost("login")]
     public async Task<ActionResult<AuthenticatedUserResponse>> Login(LoginRequest request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = request.Email.Trim().ToUpperInvariant();
-        var cacheKey = $"auth-failures:{normalizedEmail}";
+        var normalizedUsername = request.Username.Trim().ToUpperInvariant();
+        var cacheKey = $"auth-failures:{normalizedUsername}";
         if (cache.TryGetValue<int>(cacheKey, out var failures) && failures >= MaximumFailedAttempts)
             return StatusCode(StatusCodes.Status429TooManyRequests, new { detail = "Too many unsuccessful attempts. Try again later." });
 
-        var user = await context.Users.SingleOrDefaultAsync(candidate => candidate.NormalizedEmail == normalizedEmail, cancellationToken);
+        var user = await context.Users.SingleOrDefaultAsync(candidate => candidate.NormalizedUsername == normalizedUsername, cancellationToken);
         if (user is null || passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
         {
             cache.Set(cacheKey, failures + 1, LockoutDuration);
-            return Unauthorized(new { detail = "Email or password is incorrect." });
+            return Unauthorized(new { detail = "Username or password is incorrect." });
         }
 
         cache.Remove(cacheKey);
@@ -100,7 +100,7 @@ public class AuthController(HomehelperContext context, IPasswordHasher<User> pas
         {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Name, user.DisplayName),
-            new Claim(ClaimTypes.Email, user.Email)
+            new Claim("username", user.Username)
         };
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
     }
@@ -113,5 +113,5 @@ public class AuthController(HomehelperContext context, IPasswordHasher<User> pas
             : Task.FromResult<User?>(null);
     }
 
-    private static AuthenticatedUserResponse ToResponse(User user) => new(user.UserId, user.DisplayName, user.Email);
+    private static AuthenticatedUserResponse ToResponse(User user) => new(user.UserId, user.DisplayName, user.Username);
 }

@@ -30,7 +30,7 @@ export default function InvitesDialog({ invites, isOpen, isRespondingInviteId, o
               return (
                 <Box key={invite.childShareInviteId}>
                   <Typography>
-                    {invite.invitedByUser.displayName} ({invite.invitedByUser.email}) vill dela{" "}
+                    {invite.invitedByUser.displayName} ({invite.invitedByUser.username}) vill dela{" "}
                     <strong>{[invite.child.firstName, invite.child.lastName].filter(Boolean).join(" ")}</strong> med dig.
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ mt: 1 }}>

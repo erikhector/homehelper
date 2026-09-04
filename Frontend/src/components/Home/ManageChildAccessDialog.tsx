@@ -105,14 +105,14 @@ export default function ManageChildAccessDialog({
 
                     return (
                       <Box key={invite.childShareInviteId} sx={{ alignItems: "center", display: "flex", gap: 1 }}>
-                        <Typography sx={{ flex: 1 }}>{invite.invitedEmail}</Typography>
+                        <Typography sx={{ flex: 1 }}>{invite.invitedUsername}</Typography>
                         <Typography color="text.secondary" variant="caption">
                           Väntar på svar
                         </Typography>
                         <Tooltip title="Avbryt inbjudan">
                           <span>
                             <IconButton
-                              aria-label={`Avbryt inbjudan till ${invite.invitedEmail}`}
+                              aria-label={`Avbryt inbjudan till ${invite.invitedUsername}`}
                               color="error"
                               disabled={isCancelingInvite}
                               onClick={() => onCancelInvite(invite.childShareInviteId)}

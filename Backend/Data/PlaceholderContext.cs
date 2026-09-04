@@ -13,8 +13,8 @@ public class Placeholder
 public class User
 {
     public int UserId { get; set; }
-    public string Email { get; set; } = string.Empty;
-    public string NormalizedEmail { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string NormalizedUsername { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
@@ -84,9 +84,9 @@ public class HomehelperContext(DbContextOptions<HomehelperContext> options, Doma
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         domainHandlerProvider.RegisterQueryFilters(modelBuilder);
-        modelBuilder.Entity<User>().HasIndex(user => user.NormalizedEmail).IsUnique();
-        modelBuilder.Entity<User>().Property(user => user.Email).HasMaxLength(320).IsRequired();
-        modelBuilder.Entity<User>().Property(user => user.NormalizedEmail).HasMaxLength(320).IsRequired();
+        modelBuilder.Entity<User>().HasIndex(user => user.NormalizedUsername).IsUnique();
+        modelBuilder.Entity<User>().Property(user => user.Username).HasMaxLength(320).IsRequired();
+        modelBuilder.Entity<User>().Property(user => user.NormalizedUsername).HasMaxLength(320).IsRequired();
         modelBuilder.Entity<User>().Property(user => user.PasswordHash).HasMaxLength(500).IsRequired();
         modelBuilder.Entity<User>().Property(user => user.DisplayName).HasMaxLength(100).IsRequired();
         modelBuilder.Entity<Child>().Property(child => child.FirstName).HasMaxLength(100).IsRequired();
@@ -108,8 +108,8 @@ public class HomehelperContext(DbContextOptions<HomehelperContext> options, Doma
         modelBuilder.Entity<ParentChildLink>().Property(link => link.Role).HasConversion<string>().HasMaxLength(20).IsRequired();
         modelBuilder.Entity<ParentChildLink>().HasOne(link => link.User).WithMany(user => user.ChildLinks).HasForeignKey(link => link.UserId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<ParentChildLink>().HasOne(link => link.Child).WithMany(child => child.ParentLinks).HasForeignKey(link => link.ChildId).OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<ChildShareInvite>().Property(invite => invite.InvitedEmail).HasMaxLength(320).IsRequired();
-        modelBuilder.Entity<ChildShareInvite>().Property(invite => invite.NormalizedInvitedEmail).HasMaxLength(320).IsRequired();
+        modelBuilder.Entity<ChildShareInvite>().Property(invite => invite.InvitedUsername).HasMaxLength(320).IsRequired();
+        modelBuilder.Entity<ChildShareInvite>().Property(invite => invite.NormalizedInvitedUsername).HasMaxLength(320).IsRequired();
         modelBuilder.Entity<ChildShareInvite>().Property(invite => invite.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
         modelBuilder.Entity<ChildShareInvite>().HasOne(invite => invite.Child).WithMany(child => child.ShareInvites).HasForeignKey(invite => invite.ChildId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<ChildShareInvite>().HasOne(invite => invite.InvitedByUser).WithMany().HasForeignKey(invite => invite.InvitedByUserId).OnDelete(DeleteBehavior.NoAction);

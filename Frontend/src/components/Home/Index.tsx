@@ -59,9 +59,12 @@ export default function Index() {
     dashboard.deleteItemMutation.mutate({ childId: dashboard.activeChildId, itemId: item.itemId });
   };
 
-  const shareActiveChild = ({ email }: ShareChildFormValues) => {
+  const shareActiveChild = ({ username }: ShareChildFormValues) => {
     if (dashboard.activeChildId === "") return;
-    dashboard.shareChildMutation.mutate({ childId: dashboard.activeChildId, email: email.trim() }, { onSuccess: () => setIsShareDialogOpen(false) });
+    dashboard.shareChildMutation.mutate(
+      { childId: dashboard.activeChildId, username: username.trim() },
+      { onSuccess: () => setIsShareDialogOpen(false) }
+    );
   };
 
   const activateTemplate = (itemTemplateId: number) => {

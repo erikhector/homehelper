@@ -9,7 +9,7 @@ import { ProblemDetailsError } from "Src/api/HttpClient";
 
 interface SignupFormValues {
   displayName: string;
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -27,8 +27,8 @@ export default function Index() {
   const errorMessage =
     registerMutation.error instanceof ProblemDetailsError ? registerMutation.error.detail : "Det gick inte att skapa kontot. Försök igen.";
 
-  const submitRegistration = ({ displayName, email, password }: SignupFormValues) => {
-    registerMutation.mutate({ displayName, email, password });
+  const submitRegistration = ({ displayName, username, password }: SignupFormValues) => {
+    registerMutation.mutate({ displayName, username, password });
   };
 
   return (
@@ -49,7 +49,7 @@ export default function Index() {
         <Stack spacing={2} sx={{ mt: 3 }}>
           {registerMutation.isError && <Alert severity="error">{errorMessage}</Alert>}
           <TextField required autoComplete="name" label="Ditt namn" {...registerField("displayName", { required: true })} />
-          <TextField required autoComplete="email" label="E-post" type="email" {...registerField("email", { required: true })} />
+          <TextField required autoComplete="username" label="Användarnamn" {...registerField("username", { required: true })} />
           <TextField required autoComplete="new-password" label="Lösenord" type="password" {...registerField("password", { required: true })} />
           <Button disabled={registerMutation.isPending} type="submit" variant="contained">
             {registerMutation.isPending ? "Skapar konto..." : "Skapa konto"}

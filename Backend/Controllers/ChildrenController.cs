@@ -11,7 +11,7 @@ public record CreateItemRequest(string Name, string Category);
 public record UpdateItemQuantitiesRequest(int HomeQuantity, int KindergartenQuantity);
 public record ItemTemplateEntryRequest(string Name, string Category, int Quantity);
 public record SaveItemTemplateRequest(string Name, List<ItemTemplateEntryRequest> Entries);
-public record ShareChildRequest(string Email);
+public record ShareChildRequest(string Username);
 
 [Route("api/children")]
 [ApiController]
@@ -41,7 +41,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
                     User = new User
                     {
                         DisplayName = link.User.DisplayName,
-                        Email = link.User.Email,
+                        Username = link.User.Username,
                         UserId = link.User.UserId
                     }
                 }).ToList(),
@@ -49,7 +49,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
                 {
                     ChildShareInviteId = invite.ChildShareInviteId,
                     ChildId = invite.ChildId,
-                    InvitedEmail = invite.InvitedEmail,
+                    InvitedUsername = invite.InvitedUsername,
                     Status = invite.Status,
                     CreatedAt = invite.CreatedAt
                 }).ToList()
@@ -273,9 +273,9 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         var isOwner = await context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == userId && link.Role == ParentChildRole.Owner, cancellationToken);
         if (!isOwner) return NotFound();
 
-        var email = request.Email.Trim();
-        var normalizedEmail = email.ToUpperInvariant();
-        var parent = await context.Users.SingleOrDefaultAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken);
+        var username = request.Username.Trim();
+        var normalizedUsername = username.ToUpperInvariant();
+        var parent = await context.Users.SingleOrDefaultAsync(user => user.NormalizedUsername == normalizedUsername, cancellationToken);
         if (parent is not null)
         {
             var alreadyLinked = await context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == parent.UserId, cancellationToken);
@@ -283,15 +283,15 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         }
 
         var alreadyInvited = await context.ChildShareInvites.AnyAsync(
-            invite => invite.ChildId == childId && invite.NormalizedInvitedEmail == normalizedEmail && invite.Status == ChildShareInviteStatus.Pending,
+            invite => invite.ChildId == childId && invite.NormalizedInvitedUsername == normalizedUsername && invite.Status == ChildShareInviteStatus.Pending,
             cancellationToken);
-        if (alreadyInvited) return Conflict(new { detail = "An invite is already pending for this email." });
+        if (alreadyInvited) return Conflict(new { detail = "An invite is already pending for this username." });
 
         context.ChildShareInvites.Add(new ChildShareInvite
         {
             ChildId = childId,
-            InvitedEmail = email,
-            NormalizedInvitedEmail = normalizedEmail,
+            InvitedUsername = username,
+            NormalizedInvitedUsername = normalizedUsername,
             InvitedByUserId = userId,
             Status = ChildShareInviteStatus.Pending,
             CreatedAt = DateTimeOffset.UtcNow
@@ -314,7 +314,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
             {
                 ChildShareInviteId = invite.ChildShareInviteId,
                 ChildId = invite.ChildId,
-                InvitedEmail = invite.InvitedEmail,
+                InvitedUsername = invite.InvitedUsername,
                 Status = invite.Status,
                 CreatedAt = invite.CreatedAt
             })
@@ -342,13 +342,13 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         var user = await context.Users.SingleAsync(candidate => candidate.UserId == GetUserId(), cancellationToken);
 
         return await context.ChildShareInvites.AsNoTracking()
-            .Where(invite => invite.NormalizedInvitedEmail == user.NormalizedEmail && invite.Status == ChildShareInviteStatus.Pending)
+            .Where(invite => invite.NormalizedInvitedUsername == user.NormalizedUsername && invite.Status == ChildShareInviteStatus.Pending)
             .OrderBy(invite => invite.CreatedAt)
             .Select(invite => new ChildShareInvite
             {
                 ChildShareInviteId = invite.ChildShareInviteId,
                 ChildId = invite.ChildId,
-                InvitedEmail = invite.InvitedEmail,
+                InvitedUsername = invite.InvitedUsername,
                 Status = invite.Status,
                 CreatedAt = invite.CreatedAt,
                 Child = new Child
@@ -361,7 +361,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
                 {
                     UserId = invite.InvitedByUser.UserId,
                     DisplayName = invite.InvitedByUser.DisplayName,
-                    Email = invite.InvitedByUser.Email
+                    Username = invite.InvitedByUser.Username
                 }
             })
             .ToListAsync(cancellationToken);
@@ -372,7 +372,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     {
         var user = await context.Users.SingleAsync(candidate => candidate.UserId == GetUserId(), cancellationToken);
         var invite = await context.ChildShareInvites.SingleOrDefaultAsync(
-            candidate => candidate.ChildShareInviteId == inviteId && candidate.NormalizedInvitedEmail == user.NormalizedEmail,
+            candidate => candidate.ChildShareInviteId == inviteId && candidate.NormalizedInvitedUsername == user.NormalizedUsername,
             cancellationToken);
         if (invite is null || invite.Status != ChildShareInviteStatus.Pending) return NotFound();
 
@@ -391,7 +391,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
     {
         var user = await context.Users.SingleAsync(candidate => candidate.UserId == GetUserId(), cancellationToken);
         var invite = await context.ChildShareInvites.SingleOrDefaultAsync(
-            candidate => candidate.ChildShareInviteId == inviteId && candidate.NormalizedInvitedEmail == user.NormalizedEmail,
+            candidate => candidate.ChildShareInviteId == inviteId && candidate.NormalizedInvitedUsername == user.NormalizedUsername,
             cancellationToken);
         if (invite is null || invite.Status != ChildShareInviteStatus.Pending) return NotFound();
 
