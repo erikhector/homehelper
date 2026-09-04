@@ -7,11 +7,11 @@
 \******************************************/
 
 export enum ChildShareInviteStatus {
-    Pending = 0,
-    Accepted = 1,
-    Declined = 2,
+    Pending = "Pending",
+    Accepted = "Accepted",
+    Declined = "Declined",
 }
 export enum ParentChildRole {
-    Owner = 0,
-    Guardian = 1,
+    Owner = "Owner",
+    Guardian = "Guardian",
 }

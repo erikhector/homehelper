@@ -54,7 +54,8 @@ if (app.Environment.IsDevelopment())
         Output = "../Frontend/src/api",
         CleanOutput = true,
         UseInheritance = true,
-        UseChecksum = false
+        UseChecksum = false,
+        EnumType = EnumTypes.Strings
     });
 }
 else
