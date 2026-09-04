@@ -24,9 +24,11 @@ interface ManageChildAccessDialogProps {
   child: Child | undefined;
   currentUserId: number | undefined;
   errorMessage: string | undefined;
+  isCancelingInviteId: number | undefined;
   isDeletingChild: boolean;
   isOpen: boolean;
   isRevokingParentUserId: number | undefined;
+  onCancelInvite: (inviteId: number) => void;
   onClose: () => void;
   onDeleteChild: () => void;
   onRevokeAccess: (parentUserId: number) => void;
@@ -36,9 +38,11 @@ export default function ManageChildAccessDialog({
   child,
   currentUserId,
   errorMessage,
+  isCancelingInviteId,
   isDeletingChild,
   isOpen,
   isRevokingParentUserId,
+  onCancelInvite,
   onClose,
   onDeleteChild,
   onRevokeAccess
@@ -46,6 +50,7 @@ export default function ManageChildAccessDialog({
   const currentUserLink = child?.parentLinks.find((link) => link.userId === currentUserId);
   const isOwner = currentUserLink?.role === ParentChildRole.Owner;
   const guardians = child?.parentLinks.filter((link) => link.role === ParentChildRole.Guardian) ?? [];
+  const pendingInvites = child?.shareInvites ?? [];
 
   return (
     <Dialog fullWidth maxWidth="xs" open={isOpen} onClose={onClose}>
@@ -89,6 +94,41 @@ export default function ManageChildAccessDialog({
                     </Box>
                   );
                 })
+              )}
+              {pendingInvites.length > 0 && (
+                <>
+                  <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
+                    Väntande inbjudningar.
+                  </Typography>
+                  {pendingInvites.map((invite) => {
+                    const isCancelingInvite = invite.childShareInviteId === isCancelingInviteId;
+
+                    return (
+                      <Box key={invite.childShareInviteId} sx={{ alignItems: "center", display: "flex", gap: 1 }}>
+                        <Typography sx={{ flex: 1 }}>{invite.invitedEmail}</Typography>
+                        <Typography color="text.secondary" variant="caption">
+                          Väntar på svar
+                        </Typography>
+                        <Tooltip title="Avbryt inbjudan">
+                          <span>
+                            <IconButton
+                              aria-label={`Avbryt inbjudan till ${invite.invitedEmail}`}
+                              color="error"
+                              disabled={isCancelingInvite}
+                              onClick={() => onCancelInvite(invite.childShareInviteId)}
+                            >
+                              {isCancelingInvite ? (
+                                <CircularProgress aria-label="Avbryter inbjudan" color="inherit" size={20} />
+                              ) : (
+                                <PersonRemoveRoundedIcon />
+                              )}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Box>
+                    );
+                  })}
+                </>
               )}
             </>
           ) : (

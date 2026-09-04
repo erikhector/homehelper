@@ -5,6 +5,7 @@ import type { Item } from "Src/api/Dto";
 import { getCurrentUser } from "Src/api/Auth";
 import {
   activateItemTemplate,
+  cancelChildInvite,
   createChild,
   createItem,
   deleteChild,
@@ -80,6 +81,12 @@ export default function useHomeDashboard(selectedChildId: "" | number) {
       void queryClient.invalidateQueries({ queryKey: ["children"] });
     }
   });
+  const cancelChildInviteMutation = useMutation({
+    mutationFn: ({ childId, inviteId }: { childId: number; inviteId: number }) => cancelChildInvite(childId, inviteId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["children"] });
+    }
+  });
   const activateItemTemplateMutation = useMutation({
     mutationFn: ({ childId, itemTemplateId }: { childId: number; itemTemplateId: number }) => activateItemTemplate(childId, itemTemplateId),
     onSuccess: (_, variables) => {
@@ -91,6 +98,7 @@ export default function useHomeDashboard(selectedChildId: "" | number) {
   return {
     activateItemTemplateMutation,
     activeChildId,
+    cancelChildInviteMutation,
     childrenQuery,
     createChildMutation,
     createItemMutation,

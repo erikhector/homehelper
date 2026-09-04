@@ -12,6 +12,7 @@ interface HomeDialogsProps {
   currentUserId: number | undefined;
   isAddChildDialogOpen: boolean;
   isAddItemDialogOpen: boolean;
+  isCancelingInviteId: number | undefined;
   isCreatingChild: boolean;
   isCreatingItem: boolean;
   isDeletingChild: boolean;
@@ -22,6 +23,7 @@ interface HomeDialogsProps {
   manageAccessErrorMessage: string | undefined;
   onAddChild: (values: AddChildFormValues) => void;
   onAddItem: (values: AddItemFormValues) => void;
+  onCancelInvite: (inviteId: number) => void;
   onCloseAddChild: () => void;
   onCloseAddItem: () => void;
   onCloseManageAccess: () => void;
@@ -37,6 +39,7 @@ export default function HomeDialogs({
   currentUserId,
   isAddChildDialogOpen,
   isAddItemDialogOpen,
+  isCancelingInviteId,
   isCreatingChild,
   isCreatingItem,
   isDeletingChild,
@@ -47,6 +50,7 @@ export default function HomeDialogs({
   manageAccessErrorMessage,
   onAddChild,
   onAddItem,
+  onCancelInvite,
   onCloseAddChild,
   onCloseAddItem,
   onCloseManageAccess,
@@ -72,9 +76,11 @@ export default function HomeDialogs({
         child={selectedChild}
         currentUserId={currentUserId}
         errorMessage={manageAccessErrorMessage}
+        isCancelingInviteId={isCancelingInviteId}
         isDeletingChild={isDeletingChild}
         isOpen={isManageAccessDialogOpen}
         isRevokingParentUserId={isRevokingParentUserId}
+        onCancelInvite={onCancelInvite}
         onClose={onCloseManageAccess}
         onDeleteChild={onDeleteChild}
         onRevokeAccess={onRevokeAccess}

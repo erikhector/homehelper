@@ -44,6 +44,14 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
                         Email = link.User.Email,
                         UserId = link.User.UserId
                     }
+                }).ToList(),
+                ShareInvites = child.ShareInvites.Where(invite => invite.Status == ChildShareInviteStatus.Pending).Select(invite => new ChildShareInvite
+                {
+                    ChildShareInviteId = invite.ChildShareInviteId,
+                    ChildId = invite.ChildId,
+                    InvitedEmail = invite.InvitedEmail,
+                    Status = invite.Status,
+                    CreatedAt = invite.CreatedAt
                 }).ToList()
             })
             .ToListAsync(cancellationToken);
@@ -265,14 +273,130 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         var isOwner = await context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == userId && link.Role == ParentChildRole.Owner, cancellationToken);
         if (!isOwner) return NotFound();
 
-        var normalizedEmail = request.Email.Trim().ToUpperInvariant();
+        var email = request.Email.Trim();
+        var normalizedEmail = email.ToUpperInvariant();
         var parent = await context.Users.SingleOrDefaultAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken);
-        if (parent is null) return NotFound();
+        if (parent is not null)
+        {
+            var alreadyLinked = await context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == parent.UserId, cancellationToken);
+            if (alreadyLinked) return Conflict(new { detail = "This parent already has access to the child." });
+        }
 
-        var alreadyLinked = await context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == parent.UserId, cancellationToken);
-        if (alreadyLinked) return Conflict(new { detail = "This parent already has access to the child." });
+        var alreadyInvited = await context.ChildShareInvites.AnyAsync(
+            invite => invite.ChildId == childId && invite.NormalizedInvitedEmail == normalizedEmail && invite.Status == ChildShareInviteStatus.Pending,
+            cancellationToken);
+        if (alreadyInvited) return Conflict(new { detail = "An invite is already pending for this email." });
 
-        context.ParentChildLinks.Add(new ParentChildLink { ChildId = childId, UserId = parent.UserId, Role = ParentChildRole.Guardian, CreatedAt = DateTimeOffset.UtcNow });
+        context.ChildShareInvites.Add(new ChildShareInvite
+        {
+            ChildId = childId,
+            InvitedEmail = email,
+            NormalizedInvitedEmail = normalizedEmail,
+            InvitedByUserId = userId,
+            Status = ChildShareInviteStatus.Pending,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+        await context.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("{childId:int}/invites")]
+    public async Task<ActionResult<List<ChildShareInvite>>> GetChildInvites(int childId, CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var isOwner = await context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == userId && link.Role == ParentChildRole.Owner, cancellationToken);
+        if (!isOwner) return NotFound();
+
+        return await context.ChildShareInvites.AsNoTracking()
+            .Where(invite => invite.ChildId == childId && invite.Status == ChildShareInviteStatus.Pending)
+            .OrderBy(invite => invite.CreatedAt)
+            .Select(invite => new ChildShareInvite
+            {
+                ChildShareInviteId = invite.ChildShareInviteId,
+                ChildId = invite.ChildId,
+                InvitedEmail = invite.InvitedEmail,
+                Status = invite.Status,
+                CreatedAt = invite.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    [HttpDelete("{childId:int}/invites/{inviteId:int}")]
+    public async Task<ActionResult> CancelChildInvite(int childId, int inviteId, CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var isOwner = await context.ParentChildLinks.AnyAsync(link => link.ChildId == childId && link.UserId == userId && link.Role == ParentChildRole.Owner, cancellationToken);
+        if (!isOwner) return NotFound();
+
+        var deletedInvites = await context.ChildShareInvites
+            .Where(invite => invite.ChildId == childId && invite.ChildShareInviteId == inviteId && invite.Status == ChildShareInviteStatus.Pending)
+            .ExecuteDeleteAsync(cancellationToken);
+        if (deletedInvites == 0) return NotFound();
+
+        return NoContent();
+    }
+
+    [HttpGet("invites/received")]
+    public async Task<ActionResult<List<ChildShareInvite>>> GetReceivedInvites(CancellationToken cancellationToken)
+    {
+        var user = await context.Users.SingleAsync(candidate => candidate.UserId == GetUserId(), cancellationToken);
+
+        return await context.ChildShareInvites.AsNoTracking()
+            .Where(invite => invite.NormalizedInvitedEmail == user.NormalizedEmail && invite.Status == ChildShareInviteStatus.Pending)
+            .OrderBy(invite => invite.CreatedAt)
+            .Select(invite => new ChildShareInvite
+            {
+                ChildShareInviteId = invite.ChildShareInviteId,
+                ChildId = invite.ChildId,
+                InvitedEmail = invite.InvitedEmail,
+                Status = invite.Status,
+                CreatedAt = invite.CreatedAt,
+                Child = new Child
+                {
+                    ChildId = invite.Child.ChildId,
+                    FirstName = invite.Child.FirstName,
+                    LastName = invite.Child.LastName
+                },
+                InvitedByUser = new User
+                {
+                    UserId = invite.InvitedByUser.UserId,
+                    DisplayName = invite.InvitedByUser.DisplayName,
+                    Email = invite.InvitedByUser.Email
+                }
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    [HttpPost("invites/{inviteId:int}/accept")]
+    public async Task<ActionResult> AcceptChildInvite(int inviteId, CancellationToken cancellationToken)
+    {
+        var user = await context.Users.SingleAsync(candidate => candidate.UserId == GetUserId(), cancellationToken);
+        var invite = await context.ChildShareInvites.SingleOrDefaultAsync(
+            candidate => candidate.ChildShareInviteId == inviteId && candidate.NormalizedInvitedEmail == user.NormalizedEmail,
+            cancellationToken);
+        if (invite is null || invite.Status != ChildShareInviteStatus.Pending) return NotFound();
+
+        var alreadyLinked = await context.ParentChildLinks.AnyAsync(link => link.ChildId == invite.ChildId && link.UserId == user.UserId, cancellationToken);
+        if (!alreadyLinked)
+            context.ParentChildLinks.Add(new ParentChildLink { ChildId = invite.ChildId, UserId = user.UserId, Role = ParentChildRole.Guardian, CreatedAt = DateTimeOffset.UtcNow });
+
+        invite.Status = ChildShareInviteStatus.Accepted;
+        invite.RespondedAt = DateTimeOffset.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("invites/{inviteId:int}/decline")]
+    public async Task<ActionResult> DeclineChildInvite(int inviteId, CancellationToken cancellationToken)
+    {
+        var user = await context.Users.SingleAsync(candidate => candidate.UserId == GetUserId(), cancellationToken);
+        var invite = await context.ChildShareInvites.SingleOrDefaultAsync(
+            candidate => candidate.ChildShareInviteId == inviteId && candidate.NormalizedInvitedEmail == user.NormalizedEmail,
+            cancellationToken);
+        if (invite is null || invite.Status != ChildShareInviteStatus.Pending) return NotFound();
+
+        invite.Status = ChildShareInviteStatus.Declined;
+        invite.RespondedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
     }

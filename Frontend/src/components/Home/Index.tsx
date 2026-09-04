@@ -92,6 +92,11 @@ export default function Index() {
     );
   };
 
+  const cancelInvite = (inviteId: number) => {
+    if (dashboard.activeChildId === "") return;
+    dashboard.cancelChildInviteMutation.mutate({ childId: dashboard.activeChildId, inviteId });
+  };
+
   let shareErrorMessage: string | undefined;
   if (dashboard.shareChildMutation.error instanceof ProblemDetailsError) {
     shareErrorMessage = dashboard.shareChildMutation.error.detail;
@@ -153,6 +158,7 @@ export default function Index() {
         currentUserId={dashboard.currentUserQuery.data?.userId}
         isAddChildDialogOpen={isAddChildDialogOpen}
         isAddItemDialogOpen={isAddItemDialogOpen}
+        isCancelingInviteId={dashboard.cancelChildInviteMutation.isPending ? dashboard.cancelChildInviteMutation.variables.inviteId : undefined}
         isCreatingChild={dashboard.createChildMutation.isPending}
         isCreatingItem={dashboard.createItemMutation.isPending}
         isDeletingChild={dashboard.deleteChildMutation.isPending}
@@ -163,7 +169,7 @@ export default function Index() {
         isShareDialogOpen={isShareDialogOpen}
         isSharingChild={dashboard.shareChildMutation.isPending}
         manageAccessErrorMessage={
-          dashboard.deleteChildMutation.isError || dashboard.revokeChildAccessMutation.isError
+          dashboard.deleteChildMutation.isError || dashboard.revokeChildAccessMutation.isError || dashboard.cancelChildInviteMutation.isError
             ? "Det gick inte att ändra åtkomsten. Försök igen."
             : undefined
         }
@@ -171,6 +177,7 @@ export default function Index() {
         shareErrorMessage={shareErrorMessage}
         onAddChild={addChild}
         onAddItem={addItem}
+        onCancelInvite={cancelInvite}
         onCloseAddChild={() => setIsAddChildDialogOpen(false)}
         onCloseAddItem={() => setIsAddItemDialogOpen(false)}
         onCloseManageAccess={() => setIsManageAccessDialogOpen(false)}

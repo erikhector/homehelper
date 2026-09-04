@@ -3,15 +3,19 @@ import { Link, Outlet, useNavigate } from "react-router";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import { AppBar, Box, IconButton, LinearProgress, Menu, MenuItem, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
+import { AppBar, Badge, Box, IconButton, LinearProgress, Menu, MenuItem, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ProfileFormValues } from "Src/components/ProfileDialog";
 
 import { getCurrentUser, logout, updateDisplayName } from "Src/api/Auth";
 
+import InvitesDialog from "Src/components/InvitesDialog";
 import ProfileDialog from "Src/components/ProfileDialog";
+
+import useReceivedInvites from "Src/hooks/useReceivedInvites";
 
 import { ThemeModeContext } from "Src/styles/ThemeModeContext";
 
@@ -21,8 +25,14 @@ export default function Layout() {
   const queryClient = useQueryClient();
   const [accountMenuAnchor, setAccountMenuAnchor] = useState<HTMLElement | null>(null);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isInvitesDialogOpen, setIsInvitesDialogOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const { data: currentUser, isLoading: isLoadingUser } = useQuery({ queryFn: getCurrentUser, queryKey: ["current-user"], retry: false });
+  const { acceptInviteMutation, declineInviteMutation, receivedInvitesQuery } = useReceivedInvites(Boolean(currentUser));
+  const receivedInvites = receivedInvitesQuery.data ?? [];
+  let respondingInviteId: number | undefined;
+  if (acceptInviteMutation.isPending) respondingInviteId = acceptInviteMutation.variables;
+  else if (declineInviteMutation.isPending) respondingInviteId = declineInviteMutation.variables;
   const updateDisplayNameMutation = useMutation({
     mutationFn: updateDisplayName,
     onSuccess: async (user) => {
@@ -85,6 +95,13 @@ export default function Layout() {
             </Tooltip>
             {currentUser && (
               <>
+                <Tooltip title="Inbjudningar">
+                  <IconButton aria-label="Öppna inbjudningar" onClick={() => setIsInvitesDialogOpen(true)}>
+                    <Badge badgeContent={receivedInvites.length} color="error">
+                      <NotificationsRoundedIcon />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title="Konto">
                   <IconButton aria-label="Öppna kontomeny" onClick={(event) => setAccountMenuAnchor(event.currentTarget)}>
                     <PersonRoundedIcon />
@@ -112,6 +129,14 @@ export default function Layout() {
         isPending={updateDisplayNameMutation.isPending}
         onClose={() => setIsProfileDialogOpen(false)}
         onSubmit={({ displayName: newDisplayName }: ProfileFormValues) => updateDisplayNameMutation.mutate({ displayName: newDisplayName.trim() })}
+      />
+      <InvitesDialog
+        invites={receivedInvites}
+        isOpen={isInvitesDialogOpen}
+        isRespondingInviteId={respondingInviteId}
+        onAccept={(inviteId) => acceptInviteMutation.mutate(inviteId)}
+        onClose={() => setIsInvitesDialogOpen(false)}
+        onDecline={(inviteId) => declineInviteMutation.mutate(inviteId)}
       />
     </Box>
   );

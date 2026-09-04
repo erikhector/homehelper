@@ -21,6 +21,19 @@ export interface Child {
     itemTemplates: ItemTemplate[];
     lastName: string | null;
     parentLinks: ParentChildLink[];
+    shareInvites: ChildShareInvite[];
+}
+export interface ChildShareInvite {
+    child: Child;
+    childId: number;
+    childShareInviteId: number;
+    createdAt: string;
+    invitedByUser: User;
+    invitedByUserId: number;
+    invitedEmail: string;
+    normalizedInvitedEmail: string;
+    respondedAt: string | null;
+    status: Enums.ChildShareInviteStatus;
 }
 export interface CreateChildRequest {
     firstName: string;

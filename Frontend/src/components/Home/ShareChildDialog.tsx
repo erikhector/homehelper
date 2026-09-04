@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from "@mui/material";
 
 export interface ShareChildFormValues {
   email: string;
@@ -29,6 +29,9 @@ export default function ShareChildDialog({ errorMessage, isOpen, isPending, onCl
           <Stack spacing={2} sx={{ pt: 1 }}>
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
             <TextField autoFocus required autoComplete="email" label="Förälderns e-post" type="email" {...register("email", { required: true })} />
+            <Typography color="text.secondary" variant="body2">
+              Personen får en inbjudan som de kan acceptera eller avböja. Har de inget konto än kan de skapa ett och inbjudan väntar tills dess.
+            </Typography>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -36,7 +39,7 @@ export default function ShareChildDialog({ errorMessage, isOpen, isPending, onCl
             Avbryt
           </Button>
           <Button disabled={isPending} type="submit" variant="contained">
-            {isPending ? "Delar..." : "Dela barn"}
+            {isPending ? "Skickar..." : "Skicka inbjudan"}
           </Button>
         </DialogActions>
       </form>
