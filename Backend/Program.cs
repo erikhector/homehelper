@@ -6,6 +6,7 @@ using Dekiru.Hermes;
 using HomeHelper.Data;
 using HomeHelper.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -35,7 +36,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddScoped<ContextService>();
 builder.Services.AddDbContext<HomehelperContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Database")));
 
 var app = builder.Build();
 
@@ -58,6 +59,14 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
+    // Render terminates TLS at its edge proxy and forwards plain HTTP; without trusting
+    // X-Forwarded-Proto here, UseHttpsRedirection below would redirect-loop.
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+        KnownIPNetworks = { },
+        KnownProxies = { }
+    });
     app.UseHttpsRedirection();
     app.UseWhen(context =>
         HttpMethods.IsGet(context.Request.Method),
