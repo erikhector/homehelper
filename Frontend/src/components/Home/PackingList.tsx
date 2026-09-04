@@ -2,6 +2,7 @@ import { useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { alpha, useTheme } from "@mui/material/styles";
@@ -35,9 +36,9 @@ interface PackingListProps {
 }
 
 const inventoryStatuses = {
-  low: { color: "warning", label: "Behöver fyllas på" },
-  missing: { color: "error", label: "Saknas - ta med till förskolan" },
-  sufficient: { color: "success", label: "Tillräckligt på förskolan" }
+  low: { color: "warning", icon: WarningAmberRoundedIcon, label: "Behöver fyllas på" },
+  missing: { color: "error", icon: ErrorRoundedIcon, label: "Saknas - ta med till förskolan" },
+  sufficient: { color: "success", icon: CheckCircleRoundedIcon, label: "Tillräckligt på förskolan" }
 } as const;
 
 export default function PackingList({
@@ -113,6 +114,7 @@ export default function PackingList({
           if (missingQuantity > 1) stockStatusKey = "missing";
           if (missingQuantity === 1) stockStatusKey = "low";
           const stockStatus = inventoryStatuses[stockStatusKey];
+          const StockStatusIcon = stockStatus.icon;
           const updateKindergartenQuantity = (kindergartenQuantity: number) =>
             onUpdateItemQuantities(item, { homeQuantity: item.homeQuantity, kindergartenQuantity });
 
@@ -134,7 +136,7 @@ export default function PackingList({
                     color: `${stockStatus.color}.contrastText`
                   }}
                 >
-                  {stockStatusKey === "low" ? <WarningAmberRoundedIcon /> : <CheckCircleRoundedIcon />}
+                  <StockStatusIcon />
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography sx={{ fontWeight: 700 }}>{item.name}</Typography>
