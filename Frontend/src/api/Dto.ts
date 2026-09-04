@@ -53,6 +53,7 @@ export interface Item {
     itemTemplateEntryId: number | null;
     kindergartenQuantity: number;
     name: string;
+    reorderUrl: string | null;
 }
 export interface ItemTemplate {
     child: Child;

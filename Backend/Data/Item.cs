@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace HomeHelper.Data;
 
 public class Item
@@ -11,6 +13,9 @@ public class Item
     public int KindergartenQuantity { get; set; }
     public Child Child { get; set; } = null!;
     public ItemTemplateEntry? ItemTemplateEntry { get; set; }
+
+    [NotMapped]
+    public string? ReorderUrl { get; set; }
 }
 
 public class ItemTemplate

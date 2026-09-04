@@ -24,6 +24,7 @@ public class User
 
 public class HomehelperContext(DbContextOptions<HomehelperContext> options, DomainHandlerProvider domainHandlerProvider) : DbContext(options)
 {
+    public DbSet<CategorySponsor> CategorySponsors => Set<CategorySponsor>();
     public DbSet<Child> Children => Set<Child>();
     public DbSet<ChildShareInvite> ChildShareInvites => Set<ChildShareInvite>();
     public DbSet<Item> Items => Set<Item>();
@@ -113,5 +114,14 @@ public class HomehelperContext(DbContextOptions<HomehelperContext> options, Doma
         modelBuilder.Entity<ChildShareInvite>().Property(invite => invite.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
         modelBuilder.Entity<ChildShareInvite>().HasOne(invite => invite.Child).WithMany(child => child.ShareInvites).HasForeignKey(invite => invite.ChildId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<ChildShareInvite>().HasOne(invite => invite.InvitedByUser).WithMany().HasForeignKey(invite => invite.InvitedByUserId).OnDelete(DeleteBehavior.NoAction);
+        modelBuilder.Entity<CategorySponsor>().HasIndex(sponsor => sponsor.Category).IsUnique();
+        modelBuilder.Entity<CategorySponsor>().Property(sponsor => sponsor.Category).HasMaxLength(50).IsRequired();
+        modelBuilder.Entity<CategorySponsor>().Property(sponsor => sponsor.RetailerName).HasMaxLength(100).IsRequired();
+        modelBuilder.Entity<CategorySponsor>().Property(sponsor => sponsor.UrlTemplate).HasMaxLength(500).IsRequired();
+        modelBuilder.Entity<CategorySponsor>().HasData(
+            new CategorySponsor { CategorySponsorId = 1, Category = "Blöjor", RetailerName = "Exempel Babybutik", UrlTemplate = "https://example.com/sok?parti=homehelper&fraga={itemName}" },
+            new CategorySponsor { CategorySponsorId = 2, Category = "Kläder", RetailerName = "Exempel Barnkläder", UrlTemplate = "https://example.com/sok?parti=homehelper&fraga={itemName}" },
+            new CategorySponsor { CategorySponsorId = 3, Category = "Skor", RetailerName = "Exempel Skobutik", UrlTemplate = "https://example.com/sok?parti=homehelper&fraga={itemName}" }
+        );
     }
 }

@@ -89,7 +89,7 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         var userId = GetUserId();
         if (!await HasChildAccess(childId, userId, cancellationToken)) return NotFound();
 
-        return await context.Items.AsNoTracking()
+        var items = await context.Items.AsNoTracking()
             .Where(item => item.ChildId == childId)
             .OrderBy(item => item.Name)
             .Select(item => new Item
@@ -113,6 +113,9 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
                     }
             })
             .ToListAsync(cancellationToken);
+
+        await ApplyReorderUrls(items, cancellationToken);
+        return items;
     }
 
     [HttpPost("{childId:int}/items")]
@@ -420,6 +423,19 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         context.ParentChildLinks.Remove(link);
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    private async Task ApplyReorderUrls(List<Item> items, CancellationToken cancellationToken)
+    {
+        var categories = items.Where(item => item.HomeQuantity == 0).Select(item => item.Category).Distinct().ToList();
+        if (categories.Count == 0) return;
+
+        var sponsorsByCategory = await context.CategorySponsors.AsNoTracking()
+            .Where(sponsor => categories.Contains(sponsor.Category))
+            .ToDictionaryAsync(sponsor => sponsor.Category, sponsor => sponsor.UrlTemplate, cancellationToken);
+
+        foreach (var item in items.Where(item => item.HomeQuantity == 0 && sponsorsByCategory.ContainsKey(item.Category)))
+            item.ReorderUrl = sponsorsByCategory[item.Category].Replace("{itemName}", Uri.EscapeDataString(item.Name));
     }
 
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

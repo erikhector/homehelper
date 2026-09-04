@@ -4,12 +4,14 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
+import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { alpha, useTheme } from "@mui/material/styles";
 import {
   Avatar,
   Box,
   Button,
+  Chip,
   CircularProgress,
   FormControl,
   IconButton,
@@ -143,6 +145,20 @@ export default function PackingList({
                   <Typography color="text.secondary" variant="body2">
                     {item.category} - {stockStatus.label}
                   </Typography>
+                  {item.reorderUrl && (
+                    <Chip
+                      clickable
+                      component="a"
+                      href={item.reorderUrl}
+                      icon={<ShoppingCartRoundedIcon />}
+                      label="Köp fler · Annons"
+                      rel="noopener noreferrer sponsored"
+                      size="small"
+                      sx={{ mt: 0.5 }}
+                      target="_blank"
+                      variant="outlined"
+                    />
+                  )}
                 </Box>
                 <Stack direction={{ sm: "row", xs: "column" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, width: { sm: "auto", xs: "100%" } }}>
                   <Box
