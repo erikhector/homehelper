@@ -9,7 +9,7 @@ interface TomorrowSummaryProps {
 
 export default function TomorrowSummary({ atKindergartenCount, missingItems }: TomorrowSummaryProps) {
   return (
-    <Paper component="section" sx={{ bgcolor: "primary.dark", color: "primary.contrastText", mb: 3, p: { sm: 3.5, xs: 2.5 } }}>
+    <Paper component="section" sx={{ bgcolor: "primary.main", color: "primary.contrastText", mb: 3, p: { sm: 3.5, xs: 2.5 } }}>
       <Box
         sx={{ alignItems: { sm: "center" }, display: "flex", flexDirection: { sm: "row", xs: "column" }, gap: 2, justifyContent: "space-between" }}
       >

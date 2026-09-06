@@ -3,9 +3,7 @@ import { Link, Outlet, useNavigate } from "react-router";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
-import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import { AppBar, Badge, Box, IconButton, LinearProgress, Menu, MenuItem, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
+import { AppBar, Box, IconButton, LinearProgress, Toolbar, Tooltip, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ProfileFormValues } from "Src/components/ProfileDialog";
@@ -13,6 +11,8 @@ import type { ProfileFormValues } from "Src/components/ProfileDialog";
 import { getCurrentUser, logout, updateDisplayName } from "Src/api/Auth";
 
 import InvitesDialog from "Src/components/InvitesDialog";
+import BottomNav from "Src/components/layout/BottomNav";
+import Sidebar from "Src/components/layout/Sidebar";
 import ProfileDialog from "Src/components/ProfileDialog";
 
 import useReceivedInvites from "Src/hooks/useReceivedInvites";
@@ -23,7 +23,6 @@ export default function Layout() {
   const { mode, toggleMode } = useContext(ThemeModeContext);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [accountMenuAnchor, setAccountMenuAnchor] = useState<HTMLElement | null>(null);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isInvitesDialogOpen, setIsInvitesDialogOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -51,78 +50,71 @@ export default function Layout() {
 
   const openProfileDialog = () => {
     setDisplayName(currentUser?.displayName ?? "");
-    setAccountMenuAnchor(null);
     setIsProfileDialogOpen(true);
   };
+  const isAuthenticated = Boolean(currentUser);
 
   return (
-    <Box sx={{ minHeight: "100vh" }}>
-      <AppBar color="inherit" elevation={0} position="static" sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Toolbar sx={{ gap: 1, justifyContent: "space-between", minHeight: { sm: 64, xs: 56 } }}>
-          <Box
-            component={Link}
-            sx={{ alignItems: "center", color: "inherit", display: "flex", gap: 1.25, textDecoration: "none" }}
-            to="/children"
-            onClick={(event) => {
-              if (!currentUser) {
-                event.preventDefault();
-              }
-            }}
-          >
-            <Box
-              sx={{
-                alignItems: "center",
-                bgcolor: "primary.main",
-                borderRadius: 2,
-                color: "common.white",
-                display: "flex",
-                height: 36,
-                justifyContent: "center",
-                width: 36
-              }}
-            >
-              <HomeRoundedIcon />
-            </Box>
-            <Typography color="primary.dark" component="span" sx={{ fontSize: "1.15rem", fontWeight: 800 }}>
-              HomeHelper
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={0.5}>
-            <Tooltip title={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"}>
-              <IconButton aria-label={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"} onClick={toggleMode}>
-                {mode === "light" ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
-              </IconButton>
-            </Tooltip>
-            {currentUser && (
-              <>
-                <Tooltip title="Inbjudningar">
-                  <IconButton aria-label="Öppna inbjudningar" onClick={() => setIsInvitesDialogOpen(true)}>
-                    <Badge badgeContent={receivedInvites.length} color="error">
-                      <NotificationsRoundedIcon />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Konto">
-                  <IconButton aria-label="Öppna kontomeny" onClick={(event) => setAccountMenuAnchor(event.currentTarget)}>
-                    <PersonRoundedIcon />
-                  </IconButton>
-                </Tooltip>
-                <Menu anchorEl={accountMenuAnchor} open={Boolean(accountMenuAnchor)} onClose={() => setAccountMenuAnchor(null)}>
-                  <MenuItem disabled>{currentUser.displayName}</MenuItem>
-                  <MenuItem onClick={openProfileDialog}>Ändra visningsnamn</MenuItem>
-                  <MenuItem disabled={logoutMutation.isPending} onClick={() => logoutMutation.mutate()}>
-                    {logoutMutation.isPending ? "Loggar ut..." : "Logga ut"}
-                  </MenuItem>
-                </Menu>
-              </>
-            )}
-          </Stack>
-        </Toolbar>
-        {isLoadingUser && <LinearProgress />}
-      </AppBar>
-      <main>
-        <Outlet />
-      </main>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+      {isAuthenticated && (
+        <Sidebar
+          displayName={currentUser?.displayName}
+          invitesCount={receivedInvites.length}
+          isLoggingOut={logoutMutation.isPending}
+          mode={mode}
+          onLogout={() => logoutMutation.mutate()}
+          onOpenInvites={() => setIsInvitesDialogOpen(true)}
+          onOpenProfile={openProfileDialog}
+          onToggleMode={toggleMode}
+        />
+      )}
+      <Box sx={{ display: "flex", flex: 1, flexDirection: "column" }}>
+        {!isAuthenticated && (
+          <AppBar color="inherit" elevation={0} position="static" sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Toolbar sx={{ gap: 1, justifyContent: "space-between", minHeight: { sm: 64, xs: 56 } }}>
+              <Box component={Link} sx={{ alignItems: "center", color: "inherit", display: "flex", gap: 1.25, textDecoration: "none" }} to="/">
+                <Box
+                  sx={{
+                    alignItems: "center",
+                    bgcolor: "primary.main",
+                    borderRadius: 2,
+                    color: "common.white",
+                    display: "flex",
+                    height: 36,
+                    justifyContent: "center",
+                    width: 36
+                  }}
+                >
+                  <HomeRoundedIcon />
+                </Box>
+                <Typography color="primary.dark" component="span" sx={{ fontFamily: '"Baloo 2", sans-serif', fontSize: "1.15rem", fontWeight: 700 }}>
+                  HomeHelper
+                </Typography>
+              </Box>
+              <Tooltip title={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"}>
+                <IconButton aria-label={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"} onClick={toggleMode}>
+                  {mode === "light" ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
+                </IconButton>
+              </Tooltip>
+            </Toolbar>
+            {isLoadingUser && <LinearProgress />}
+          </AppBar>
+        )}
+        <Box component="main" sx={{ flex: 1, pb: isAuthenticated ? { sm: 0, xs: 9 } : 0 }}>
+          <Outlet />
+        </Box>
+      </Box>
+      {isAuthenticated && (
+        <BottomNav
+          invitesCount={receivedInvites.length}
+          isLoggingOut={logoutMutation.isPending}
+          mode={mode}
+          onLogout={() => logoutMutation.mutate()}
+          onOpenInvites={() => setIsInvitesDialogOpen(true)}
+          onOpenProfile={openProfileDialog}
+          onToggleMode={toggleMode}
+        />
+      )}
       <ProfileDialog
         displayName={displayName}
         isOpen={isProfileDialogOpen}

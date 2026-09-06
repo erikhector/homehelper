@@ -18,7 +18,7 @@ const router = createBrowserRouter(routes, {
 });
 
 export default function App() {
-  const [mode, setMode] = useState<PaletteMode>(() => (localStorage.getItem("theme-mode") === "dark" ? "dark" : "light"));
+  const [mode, setMode] = useState<PaletteMode>(() => (localStorage.getItem("theme-mode") === "light" ? "light" : "dark"));
   const toggleMode = () =>
     setMode((currentMode) => {
       const nextMode = currentMode === "light" ? "dark" : "light";
