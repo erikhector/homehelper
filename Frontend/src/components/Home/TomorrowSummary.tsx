@@ -1,5 +1,5 @@
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
-import { Alert, Box, Button, CircularProgress, Divider, Paper, Stack, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Chip, CircularProgress, Divider, Paper, Stack, Typography } from "@mui/material";
 
 import type { Item } from "Src/api/Dto";
 
@@ -39,11 +39,20 @@ export default function TomorrowSummary({ atKindergartenCount, isFillingItems, m
             </Button>
           }
           severity="error"
-          sx={{ alignItems: "center", mt: 2 }}
+          sx={{ alignItems: "flex-start", mt: 2 }}
           variant="filled"
         >
-          Ta med till förskolan:{" "}
-          {missingItems.map((item) => `${item.name} (${item.itemTemplateEntry!.quantity - item.kindergartenQuantity})`).join(", ")}
+          <AlertTitle>Ta med till förskolan</AlertTitle>
+          <Stack direction="row" flexWrap="wrap" gap={0.75}>
+            {missingItems.map((item) => (
+              <Chip
+                key={item.itemId}
+                label={`${item.name} (${item.itemTemplateEntry!.quantity - item.kindergartenQuantity})`}
+                size="small"
+                sx={{ bgcolor: "rgba(255, 255, 255, 0.16)", color: "inherit", fontWeight: 600 }}
+              />
+            ))}
+          </Stack>
         </Alert>
       )}
       <Stack
