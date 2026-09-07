@@ -1,5 +1,6 @@
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
-import { Alert, AlertTitle, Box, Button, Chip, CircularProgress, Divider, Paper, Stack, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Chip, CircularProgress, Divider, Paper, Stack, Tooltip, Typography } from "@mui/material";
 
 import type { Item } from "Src/api/Dto";
 
@@ -8,9 +9,10 @@ interface TomorrowSummaryProps {
   isFillingItems: boolean;
   missingItems: Item[];
   onFillMissingItems: () => void;
+  onPackItem: (item: Item) => void;
 }
 
-export default function TomorrowSummary({ atKindergartenCount, isFillingItems, missingItems, onFillMissingItems }: TomorrowSummaryProps) {
+export default function TomorrowSummary({ atKindergartenCount, isFillingItems, missingItems, onFillMissingItems, onPackItem }: TomorrowSummaryProps) {
   return (
     <Paper component="section" sx={{ bgcolor: "primary.main", color: "primary.contrastText", mb: 3, p: { sm: 3.5, xs: 2.5 } }}>
       <Box
@@ -45,12 +47,22 @@ export default function TomorrowSummary({ atKindergartenCount, isFillingItems, m
           <AlertTitle>Ta med till förskolan</AlertTitle>
           <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.75 }}>
             {missingItems.map((item) => (
-              <Chip
-                key={item.itemId}
-                label={`${item.name} (${item.itemTemplateEntry!.quantity - item.kindergartenQuantity})`}
-                size="small"
-                sx={{ bgcolor: "rgba(255, 255, 255, 0.16)", color: "inherit", fontWeight: 600 }}
-              />
+              <Tooltip key={item.itemId} title="Packad">
+                <Chip
+                  clickable
+                  disabled={isFillingItems}
+                  icon={<CheckRoundedIcon fontSize="small" />}
+                  label={`${item.name} (${item.itemTemplateEntry!.quantity - item.kindergartenQuantity})`}
+                  size="small"
+                  sx={{
+                    "& .MuiChip-icon": { color: "inherit" },
+                    bgcolor: "rgba(255, 255, 255, 0.16)",
+                    color: "inherit",
+                    fontWeight: 600
+                  }}
+                  onClick={() => onPackItem(item)}
+                />
+              </Tooltip>
             ))}
           </Stack>
         </Alert>

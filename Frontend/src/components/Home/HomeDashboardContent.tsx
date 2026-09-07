@@ -81,6 +81,7 @@ export default function HomeDashboardContent({
         isFillingItems={isFillingItems}
         missingItems={missingItems}
         onFillMissingItems={() => onFillMissingItems(missingItems)}
+        onPackItem={(item) => onFillMissingItems([item])}
       />
       <PackingList
         isDeletingItemId={isDeletingItemId}
