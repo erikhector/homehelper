@@ -6,9 +6,7 @@ import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import { alpha, useTheme } from "@mui/material/styles";
 import {
-  Avatar,
   Box,
   Button,
   Chip,
@@ -24,6 +22,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 
 import type { Child, Item } from "Src/api/Dto";
 
@@ -74,10 +73,10 @@ export default function PackingList({
           Lägg till sak
         </Button>
       </Box>
-      <Paper component="section" variant="outlined">
-        <Stack direction={{ sm: "row", xs: "column" }} spacing={1} sx={{ p: 1.5 }}>
-          <TextField label="Sok pa namn" size="small" value={nameFilter} onChange={(event) => setNameFilter(event.target.value)} />
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+      <Paper component="section" sx={{ mb: 1.5, p: 1.25 }} variant="outlined">
+        <Stack direction={{ sm: "row", xs: "column" }} spacing={1}>
+          <TextField label="Sok pa namn" value={nameFilter} onChange={(event) => setNameFilter(event.target.value)} />
+          <FormControl sx={{ minWidth: 150 }}>
             <InputLabel id="category-filter-label">Kategori</InputLabel>
             <Select
               label="Kategori"
@@ -93,7 +92,7 @@ export default function PackingList({
               ))}
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+          <FormControl sx={{ minWidth: 150 }}>
             <InputLabel id="sort-order-label">Sortera</InputLabel>
             <Select label="Sortera" labelId="sort-order-label" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
               <MenuItem value="name">Namn</MenuItem>
@@ -101,11 +100,13 @@ export default function PackingList({
             </Select>
           </FormControl>
         </Stack>
-        {visibleItems.length === 0 && (
-          <Typography color="text.secondary" sx={{ p: 2 }}>
-            Inga saker matchar ditt urval.
-          </Typography>
-        )}
+      </Paper>
+      {visibleItems.length === 0 && (
+        <Typography color="text.secondary" sx={{ p: 2 }}>
+          Inga saker matchar ditt urval.
+        </Typography>
+      )}
+      <Stack spacing={0.75}>
         {visibleItems.map((item) => {
           const isDeletingItem = item.itemId === isDeletingItemId;
           const isUpdatingItem = item.itemId === isUpdatingItemId;
@@ -121,31 +122,31 @@ export default function PackingList({
             onUpdateItemQuantities(item, { homeQuantity: item.homeQuantity, kindergartenQuantity });
 
           return (
-            <Box key={item.itemId} sx={{ bgcolor: alpha(theme.palette[stockStatus.color].main, 0.16) }}>
-              <Box
-                sx={{
-                  alignItems: { sm: "center" },
-                  display: "flex",
-                  flexDirection: { sm: "row", xs: "column" },
-                  gap: 1,
-                  px: { sm: 2, xs: 1.5 },
-                  py: 1
-                }}
-              >
-                <Avatar
-                  sx={{
-                    bgcolor: `${stockStatus.color}.main`,
-                    color: `${stockStatus.color}.contrastText`
-                  }}
-                >
-                  <StockStatusIcon />
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 700 }}>{item.name}</Typography>
-                  <Typography color="text.secondary" variant="body2">
-                    {item.category} - {stockStatus.label}
-                  </Typography>
-                  {item.reorderUrl && (
+            <Box
+              key={item.itemId}
+              sx={{
+                alignItems: { sm: "center" },
+                bgcolor: alpha(theme.palette[stockStatus.color].main, 0.08),
+                border: 1,
+                borderColor: alpha(theme.palette[stockStatus.color].main, 0.35),
+                borderRadius: 1,
+                display: "flex",
+                flexDirection: { sm: "row", xs: "column" },
+                gap: 1,
+                px: 1.5,
+                py: 0.75
+              }}
+            >
+              <StockStatusIcon fontSize="small" sx={{ color: `${stockStatus.color}.main`, flexShrink: 0 }} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontWeight: 600 }} variant="body2">
+                  {item.name}
+                </Typography>
+                <Typography color="text.secondary" variant="caption">
+                  {item.category} - {stockStatus.label}
+                </Typography>
+                {item.reorderUrl && (
+                  <Box sx={{ mt: 0.5 }}>
                     <Chip
                       clickable
                       component="a"
@@ -153,56 +154,54 @@ export default function PackingList({
                       icon={<ShoppingCartRoundedIcon />}
                       label="Köp fler · Annons"
                       rel="noopener noreferrer sponsored"
-                      size="small"
-                      sx={{ mt: 0.5 }}
                       target="_blank"
                       variant="outlined"
                     />
-                  )}
-                </Box>
-                <Stack direction={{ sm: "row", xs: "column" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, width: { sm: "auto", xs: "100%" } }}>
-                  <Box
-                    sx={{ alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1, display: "flex", gap: 0.5, px: 0.5, py: 0.25 }}
-                  >
-                    <Typography color="text.secondary" sx={{ minWidth: 74 }} variant="body2">
-                      Förskolan {item.kindergartenQuantity}/{targetQuantity}
-                    </Typography>
-                    <IconButton
-                      aria-label={`Minska ${item.name} på förskolan`}
-                      disabled={isOperatingOnItem || item.kindergartenQuantity === 0}
-                      size="small"
-                      onClick={() => updateKindergartenQuantity(item.kindergartenQuantity - 1)}
-                    >
-                      <RemoveRoundedIcon fontSize="small" />
-                    </IconButton>
-                    <Typography aria-label={`${item.kindergartenQuantity} på förskolan`} sx={{ fontWeight: 700, minWidth: 24, textAlign: "center" }}>
-                      {item.kindergartenQuantity}
-                    </Typography>
-                    <IconButton
-                      aria-label={`Öka ${item.name} på förskolan`}
-                      disabled={isOperatingOnItem}
-                      size="small"
-                      onClick={() => updateKindergartenQuantity(item.kindergartenQuantity + 1)}
-                    >
-                      <AddRoundedIcon fontSize="small" />
-                    </IconButton>
                   </Box>
-                </Stack>
-                <Box sx={{ alignItems: "center", display: "flex", minHeight: 40 }}>
-                  {isUpdatingItem && <CircularProgress aria-label="Sparar antal" size={22} />}
-                  {!isUpdatingItem && (
-                    <Tooltip title="Ta bort sak">
-                      <IconButton aria-label={`Ta bort ${item.name}`} color="error" disabled={isDeletingItem} onClick={() => onDeleteItem(item)}>
-                        {isDeletingItem ? <CircularProgress aria-label="Tar bort sak" size={22} /> : <DeleteRoundedIcon />}
-                      </IconButton>
-                    </Tooltip>
-                  )}
+                )}
+              </Box>
+              <Stack direction={{ sm: "row", xs: "column" }} spacing={1} sx={{ alignItems: { sm: "center" }, width: { sm: "auto", xs: "100%" } }}>
+                <Box sx={{ alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1, display: "flex", gap: 0.25, px: 0.5 }}>
+                  <Typography color="text.secondary" sx={{ minWidth: 66 }} variant="caption">
+                    Förskolan {item.kindergartenQuantity}/{targetQuantity}
+                  </Typography>
+                  <IconButton
+                    aria-label={`Minska ${item.name} på förskolan`}
+                    disabled={isOperatingOnItem || item.kindergartenQuantity === 0}
+                    onClick={() => updateKindergartenQuantity(item.kindergartenQuantity - 1)}
+                  >
+                    <RemoveRoundedIcon fontSize="small" />
+                  </IconButton>
+                  <Typography
+                    aria-label={`${item.kindergartenQuantity} på förskolan`}
+                    sx={{ fontWeight: 700, minWidth: 18, textAlign: "center" }}
+                    variant="body2"
+                  >
+                    {item.kindergartenQuantity}
+                  </Typography>
+                  <IconButton
+                    aria-label={`Öka ${item.name} på förskolan`}
+                    disabled={isOperatingOnItem}
+                    onClick={() => updateKindergartenQuantity(item.kindergartenQuantity + 1)}
+                  >
+                    <AddRoundedIcon fontSize="small" />
+                  </IconButton>
                 </Box>
+              </Stack>
+              <Box sx={{ alignItems: "center", display: "flex", justifyContent: "center", minHeight: 28, minWidth: 28 }}>
+                {isUpdatingItem && <CircularProgress aria-label="Sparar antal" size={16} />}
+                {!isUpdatingItem && (
+                  <Tooltip title="Ta bort sak">
+                    <IconButton aria-label={`Ta bort ${item.name}`} color="error" disabled={isDeletingItem} onClick={() => onDeleteItem(item)}>
+                      {isDeletingItem ? <CircularProgress aria-label="Tar bort sak" size={16} /> : <DeleteRoundedIcon fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Box>
             </Box>
           );
         })}
-      </Paper>
+      </Stack>
     </>
   );
 }

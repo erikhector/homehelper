@@ -10,6 +10,7 @@ export default function createAppTheme(mode: PaletteMode) {
   return createTheme({
     components: {
       MuiButton: { defaultProps: { disableElevation: true } },
+      MuiChip: { defaultProps: { size: "small" } },
       MuiCssBaseline: {
         styleOverrides: {
           body: {
@@ -20,7 +21,11 @@ export default function createAppTheme(mode: PaletteMode) {
           }
         }
       },
-      MuiPaper: { styleOverrides: { root: { backgroundImage: "none" } } }
+      MuiFormControl: { defaultProps: { size: "small" } },
+      MuiIconButton: { defaultProps: { size: "small" } },
+      MuiPaper: { styleOverrides: { root: { backgroundImage: "none" } } },
+      MuiSvgIcon: { defaultProps: { fontSize: "small" } },
+      MuiTextField: { defaultProps: { size: "small" } }
     },
     palette: {
       background: { default: isDarkMode ? "#0a0a0a" : "#f9f7fd", paper: isDarkMode ? "#1b1a27" : "#fefdff" },
@@ -37,7 +42,7 @@ export default function createAppTheme(mode: PaletteMode) {
       text: { primary: isDarkMode ? "#fafafa" : "#1f1c2f", secondary: isDarkMode ? "#a4a2b7" : "#5d5b6e" },
       warning: { main: isDarkMode ? "#ffdca8" : "#815500" }
     },
-    shape: { borderRadius: 14 },
+    shape: { borderRadius: 10 },
     typography: {
       button: { fontWeight: 700, textTransform: "none" },
       fontFamily: '"Nunito", "Segoe UI", sans-serif',

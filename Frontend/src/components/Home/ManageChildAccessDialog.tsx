@@ -73,8 +73,10 @@ export default function ManageChildAccessDialog({
 
                   return (
                     <Box key={guardian.parentChildLinkId} sx={{ alignItems: "center", display: "flex", gap: 1 }}>
-                      <Avatar sx={{ height: 30, width: 30 }}>{guardian.user.displayName.charAt(0).toUpperCase()}</Avatar>
-                      <Typography sx={{ flex: 1 }}>{guardian.user.displayName}</Typography>
+                      <Avatar sx={{ fontSize: "0.8rem", height: 26, width: 26 }}>{guardian.user.displayName.charAt(0).toUpperCase()}</Avatar>
+                      <Typography sx={{ flex: 1 }} variant="body2">
+                        {guardian.user.displayName}
+                      </Typography>
                       <Tooltip title="Ta bort åtkomst">
                         <span>
                           <IconButton
@@ -105,7 +107,9 @@ export default function ManageChildAccessDialog({
 
                     return (
                       <Box key={invite.childShareInviteId} sx={{ alignItems: "center", display: "flex", gap: 1 }}>
-                        <Typography sx={{ flex: 1 }}>{invite.invitedUsername}</Typography>
+                        <Typography sx={{ flex: 1 }} variant="body2">
+                          {invite.invitedUsername}
+                        </Typography>
                         <Typography color="text.secondary" variant="caption">
                           Väntar på svar
                         </Typography>
