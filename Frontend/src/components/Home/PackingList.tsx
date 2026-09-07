@@ -3,6 +3,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
+import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
@@ -28,6 +29,7 @@ import type { Child, Item } from "Src/api/Dto";
 
 interface PackingListProps {
   isDeletingItemId: number | undefined;
+  isFillingItems: boolean;
   isUpdatingItemId: number | undefined;
   items: Item[];
   onAddItem: () => void;
@@ -44,6 +46,7 @@ const inventoryStatuses = {
 
 export default function PackingList({
   isDeletingItemId,
+  isFillingItems,
   isUpdatingItemId,
   items,
   onAddItem,
@@ -110,7 +113,7 @@ export default function PackingList({
         {visibleItems.map((item) => {
           const isDeletingItem = item.itemId === isDeletingItemId;
           const isUpdatingItem = item.itemId === isUpdatingItemId;
-          const isOperatingOnItem = isDeletingItem || isUpdatingItem;
+          const isOperatingOnItem = isDeletingItem || isUpdatingItem || isFillingItems;
           const targetQuantity = item.itemTemplateEntry?.quantity ?? 0;
           const missingQuantity = targetQuantity - item.kindergartenQuantity;
           let stockStatusKey: keyof typeof inventoryStatuses = "sufficient";
@@ -187,6 +190,20 @@ export default function PackingList({
                     <AddRoundedIcon fontSize="small" />
                   </IconButton>
                 </Box>
+                {missingQuantity > 0 && (
+                  <Tooltip title={`Fyll på till ${targetQuantity} st på förskolan`}>
+                    <span>
+                      <IconButton
+                        aria-label={`Fyll på ${item.name} till ${targetQuantity} på förskolan`}
+                        color={stockStatus.color}
+                        disabled={isOperatingOnItem}
+                        onClick={() => updateKindergartenQuantity(targetQuantity)}
+                      >
+                        <PlaylistAddCheckRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
               </Stack>
               <Box sx={{ alignItems: "center", display: "flex", justifyContent: "center", minHeight: 28, minWidth: 28 }}>
                 {isUpdatingItem && <CircularProgress aria-label="Sparar antal" size={16} />}

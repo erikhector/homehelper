@@ -18,6 +18,12 @@ import {
   updateItemQuantities
 } from "Src/api/Children";
 
+interface FillItemQuantities {
+  homeQuantity: number;
+  itemId: number;
+  kindergartenQuantity: number;
+}
+
 export default function useHomeDashboard(selectedChildId: "" | number) {
   const queryClient = useQueryClient();
   const currentUserQuery = useQuery({ queryFn: getCurrentUser, queryKey: ["current-user"], retry: false });
@@ -53,6 +59,15 @@ export default function useHomeDashboard(selectedChildId: "" | number) {
       kindergartenQuantity
     }: Pick<Item, "homeQuantity" | "kindergartenQuantity"> & { childId: number; itemId: number }) =>
       updateItemQuantities(childId, itemId, { homeQuantity, kindergartenQuantity }),
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
+    }
+  });
+  const fillItemQuantitiesMutation = useMutation({
+    mutationFn: ({ childId, items }: { childId: number; items: FillItemQuantities[] }) =>
+      Promise.all(
+        items.map(({ homeQuantity, itemId, kindergartenQuantity }) => updateItemQuantities(childId, itemId, { homeQuantity, kindergartenQuantity }))
+      ),
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["children", variables.childId, "items"] });
     }
@@ -105,6 +120,7 @@ export default function useHomeDashboard(selectedChildId: "" | number) {
     currentUserQuery,
     deleteChildMutation,
     deleteItemMutation,
+    fillItemQuantitiesMutation,
     itemsQuery,
     itemTemplatesQuery,
     revokeChildAccessMutation,

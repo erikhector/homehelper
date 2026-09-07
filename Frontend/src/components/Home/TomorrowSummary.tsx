@@ -1,13 +1,16 @@
-import { Alert, Box, Divider, Paper, Stack, Typography } from "@mui/material";
+import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
+import { Alert, Box, Button, CircularProgress, Divider, Paper, Stack, Typography } from "@mui/material";
 
 import type { Item } from "Src/api/Dto";
 
 interface TomorrowSummaryProps {
   atKindergartenCount: number;
+  isFillingItems: boolean;
   missingItems: Item[];
+  onFillMissingItems: () => void;
 }
 
-export default function TomorrowSummary({ atKindergartenCount, missingItems }: TomorrowSummaryProps) {
+export default function TomorrowSummary({ atKindergartenCount, isFillingItems, missingItems, onFillMissingItems }: TomorrowSummaryProps) {
   return (
     <Paper component="section" sx={{ bgcolor: "primary.main", color: "primary.contrastText", mb: 3, p: { sm: 3.5, xs: 2.5 } }}>
       <Box
@@ -21,7 +24,24 @@ export default function TomorrowSummary({ atKindergartenCount, missingItems }: T
         </Box>
       </Box>
       {missingItems.length > 0 && (
-        <Alert severity="error" sx={{ mt: 2 }} variant="filled">
+        <Alert
+          action={
+            <Button
+              color="inherit"
+              disabled={isFillingItems}
+              size="small"
+              startIcon={isFillingItems ? <CircularProgress color="inherit" size={16} /> : <PlaylistAddCheckRoundedIcon />}
+              sx={{ whiteSpace: "nowrap" }}
+              variant="outlined"
+              onClick={onFillMissingItems}
+            >
+              Fyll allt
+            </Button>
+          }
+          severity="error"
+          sx={{ alignItems: "center", mt: 2 }}
+          variant="filled"
+        >
           Ta med till förskolan:{" "}
           {missingItems.map((item) => `${item.name} (${item.itemTemplateEntry!.quantity - item.kindergartenQuantity})`).join(", ")}
         </Alert>

@@ -54,6 +54,18 @@ export default function Index() {
     dashboard.updateItemQuantitiesMutation.mutate({ childId: dashboard.activeChildId, itemId: item.itemId, ...quantities });
   };
 
+  const fillMissingItems = (itemsToFill: Item[]) => {
+    if (dashboard.activeChildId === "") return;
+    dashboard.fillItemQuantitiesMutation.mutate({
+      childId: dashboard.activeChildId,
+      items: itemsToFill.map((item) => ({
+        homeQuantity: item.homeQuantity,
+        itemId: item.itemId,
+        kindergartenQuantity: item.itemTemplateEntry?.quantity ?? item.kindergartenQuantity
+      }))
+    });
+  };
+
   const deleteItem = (item: Item) => {
     if (dashboard.activeChildId === "") return;
     dashboard.deleteItemMutation.mutate({ childId: dashboard.activeChildId, itemId: item.itemId });
@@ -114,6 +126,7 @@ export default function Index() {
     dashboard.createItemMutation.error,
     dashboard.deleteItemMutation.error,
     dashboard.updateItemQuantitiesMutation.error,
+    dashboard.fillItemQuantitiesMutation.error,
     dashboard.activateItemTemplateMutation.error
   ].some(Boolean);
 
@@ -140,6 +153,7 @@ export default function Index() {
           childProfiles={children}
           isActivatingTemplate={dashboard.activateItemTemplateMutation.isPending}
           isDeletingItemId={dashboard.deleteItemMutation.isPending ? dashboard.deleteItemMutation.variables.itemId : undefined}
+          isFillingItems={dashboard.fillItemQuantitiesMutation.isPending}
           isLoadingChildren={dashboard.childrenQuery.isLoading}
           isUpdatingItemId={dashboard.updateItemQuantitiesMutation.isPending ? dashboard.updateItemQuantitiesMutation.variables.itemId : undefined}
           items={items}
@@ -149,6 +163,7 @@ export default function Index() {
           onAddItem={() => setIsAddItemDialogOpen(true)}
           onActivateTemplate={activateTemplate}
           onDeleteItem={deleteItem}
+          onFillMissingItems={fillMissingItems}
           onUpdateItemQuantities={updateItemQuantities}
         />
       </Box>

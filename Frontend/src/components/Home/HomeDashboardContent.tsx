@@ -10,6 +10,7 @@ interface HomeDashboardContentProps {
   childProfiles: Child[];
   isActivatingTemplate: boolean;
   isDeletingItemId: number | undefined;
+  isFillingItems: boolean;
   isLoadingChildren: boolean;
   isUpdatingItemId: number | undefined;
   items: Item[];
@@ -18,6 +19,7 @@ interface HomeDashboardContentProps {
   onAddItem: () => void;
   onActivateTemplate: (templateId: number) => void;
   onDeleteItem: (item: Item) => void;
+  onFillMissingItems: (items: Item[]) => void;
   onUpdateItemQuantities: (item: Item, quantities: Pick<Item, "homeQuantity" | "kindergartenQuantity">) => void;
   selectedChild: Child | undefined;
 }
@@ -26,6 +28,7 @@ export default function HomeDashboardContent({
   childProfiles,
   isActivatingTemplate,
   isDeletingItemId,
+  isFillingItems,
   isLoadingChildren,
   isUpdatingItemId,
   items,
@@ -34,6 +37,7 @@ export default function HomeDashboardContent({
   onAddItem,
   onActivateTemplate,
   onDeleteItem,
+  onFillMissingItems,
   onUpdateItemQuantities,
   selectedChild
 }: HomeDashboardContentProps) {
@@ -72,9 +76,15 @@ export default function HomeDashboardContent({
         itemTemplates={itemTemplates}
         onActivateTemplate={onActivateTemplate}
       />
-      <TomorrowSummary atKindergartenCount={kindergartenCount} missingItems={missingItems} />
+      <TomorrowSummary
+        atKindergartenCount={kindergartenCount}
+        isFillingItems={isFillingItems}
+        missingItems={missingItems}
+        onFillMissingItems={() => onFillMissingItems(missingItems)}
+      />
       <PackingList
         isDeletingItemId={isDeletingItemId}
+        isFillingItems={isFillingItems}
         isUpdatingItemId={isUpdatingItemId}
         items={items}
         selectedChild={selectedChild}
