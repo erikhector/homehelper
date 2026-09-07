@@ -1,9 +1,11 @@
 import { useContext, useState } from "react";
-import { Link, Outlet, useNavigate } from "react-router";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
-import { AppBar, Box, IconButton, LinearProgress, Toolbar, Tooltip, Typography } from "@mui/material";
+import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
+import { AppBar, Box, Button, IconButton, LinearProgress, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ProfileFormValues } from "Src/components/ProfileDialog";
@@ -22,6 +24,7 @@ import { ThemeModeContext } from "Src/styles/ThemeModeContext";
 export default function Layout() {
   const { mode, toggleMode } = useContext(ThemeModeContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isInvitesDialogOpen, setIsInvitesDialogOpen] = useState(false);
@@ -87,15 +90,42 @@ export default function Layout() {
                 >
                   <HomeRoundedIcon />
                 </Box>
-                <Typography color="primary.dark" component="span" sx={{ fontFamily: '"Baloo 2", sans-serif', fontSize: "1.15rem", fontWeight: 700 }}>
+                <Typography
+                  color="primary.dark"
+                  component="span"
+                  sx={{ display: { sm: "inline", xs: "none" }, fontFamily: '"Baloo 2", sans-serif', fontSize: "1.15rem", fontWeight: 700 }}
+                >
                   HomeHelper
                 </Typography>
               </Box>
-              <Tooltip title={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"}>
-                <IconButton aria-label={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"} onClick={toggleMode}>
-                  {mode === "light" ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
-                </IconButton>
-              </Tooltip>
+              <Stack alignItems="center" direction="row" spacing={{ sm: 1.5, xs: 0.75 }}>
+                {location.pathname !== "/login" && (
+                  <Button
+                    component={Link}
+                    size="small"
+                    startIcon={<LoginRoundedIcon sx={{ display: { sm: "inline-flex", xs: "none" } }} />}
+                    to="/login"
+                  >
+                    Logga in
+                  </Button>
+                )}
+                {location.pathname !== "/signup" && (
+                  <Button
+                    component={Link}
+                    size="small"
+                    startIcon={<PersonAddAltRoundedIcon sx={{ display: { sm: "inline-flex", xs: "none" } }} />}
+                    to="/signup"
+                    variant="contained"
+                  >
+                    Skapa konto
+                  </Button>
+                )}
+                <Tooltip title={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"}>
+                  <IconButton aria-label={mode === "light" ? "Använd mörkt läge" : "Använd ljust läge"} onClick={toggleMode}>
+                    {mode === "light" ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
+                  </IconButton>
+                </Tooltip>
+              </Stack>
             </Toolbar>
             {isLoadingUser && <LinearProgress />}
           </AppBar>
