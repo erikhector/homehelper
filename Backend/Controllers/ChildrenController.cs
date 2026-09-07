@@ -216,14 +216,30 @@ public class ChildrenController(HomehelperContext context) : ControllerBase
         var child = await context.Children.SingleAsync(itemChild => itemChild.ChildId == childId, cancellationToken);
         if (child.ActiveItemTemplateId == template.ItemTemplateId)
         {
-            await context.Items.Where(item => item.ChildId == childId).ExecuteDeleteAsync(cancellationToken);
-            context.Items.AddRange(template.Entries.Select(entry => new Item
+            var existingItems = await context.Items.Where(item => item.ChildId == childId).ToListAsync(cancellationToken);
+
+            foreach (var entry in template.Entries)
             {
-                ChildId = childId,
-                ItemTemplateEntryId = entry.ItemTemplateEntryId,
-                Name = entry.Name,
-                Category = entry.Category
-            }));
+                var matchingItem = existingItems.FirstOrDefault(item =>
+                    string.Equals(item.Name, entry.Name, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(item.Category, entry.Category, StringComparison.OrdinalIgnoreCase));
+
+                if (matchingItem is not null)
+                {
+                    matchingItem.ItemTemplateEntryId = entry.ItemTemplateEntryId;
+                }
+                else
+                {
+                    context.Items.Add(new Item
+                    {
+                        ChildId = childId,
+                        ItemTemplateEntryId = entry.ItemTemplateEntryId,
+                        Name = entry.Name,
+                        Category = entry.Category
+                    });
+                }
+            }
+
             await context.SaveChangesAsync(cancellationToken);
         }
 
