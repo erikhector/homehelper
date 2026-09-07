@@ -62,20 +62,19 @@ export default function Index() {
   return (
     <Box component="section">
       <Helmet title="Ordning på vardagen" />
-
       <Box sx={{ display: "grid", placeItems: "center", px: { sm: 4, xs: 2 }, py: { sm: 10, xs: 6 } }}>
         <Box sx={{ maxWidth: 640, textAlign: "center" }}>
           <Stack
-            alignItems="center"
             direction="row"
             spacing={0.75}
             sx={{
+              alignItems: "center",
               bgcolor: "primary.light",
               borderRadius: 999,
               color: "primary.dark",
               display: "inline-flex",
-              fontWeight: 700,
               fontSize: "0.8rem",
+              fontWeight: 700,
               px: 1.75,
               py: 0.6
             }}
@@ -106,7 +105,6 @@ export default function Index() {
           </Typography>
         </Box>
       </Box>
-
       <Box sx={{ maxWidth: 1120, mx: "auto", px: { sm: 4, xs: 2 }, py: { sm: 4, xs: 2 } }}>
         <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { md: "repeat(3, 1fr)", sm: "repeat(2, 1fr)", xs: "1fr" } }}>
           {features.map(({ color, description, icon: Icon, title }) => (
@@ -144,9 +142,8 @@ export default function Index() {
           ))}
         </Box>
       </Box>
-
       <Box sx={{ maxWidth: 1120, mx: "auto", px: { sm: 4, xs: 2 }, py: { sm: 8, xs: 5 } }}>
-        <Stack alignItems="center" spacing={0.75} sx={{ textAlign: "center" }}>
+        <Stack spacing={0.75} sx={{ alignItems: "center", textAlign: "center" }}>
           <Typography component="h2" variant="h4">
             Så funkar det
           </Typography>
@@ -156,7 +153,7 @@ export default function Index() {
         </Stack>
         <Box sx={{ display: "grid", gap: { sm: 4, xs: 3 }, gridTemplateColumns: { md: "repeat(4, 1fr)", sm: "repeat(2, 1fr)", xs: "1fr" }, mt: 5 }}>
           {steps.map(({ description, icon: Icon, title }, index) => (
-            <Stack key={title} alignItems="center" spacing={1.25} sx={{ textAlign: "center" }}>
+            <Stack key={title} spacing={1.25} sx={{ alignItems: "center", textAlign: "center" }}>
               <Box sx={{ position: "relative" }}>
                 <Box
                   sx={{
@@ -173,15 +170,15 @@ export default function Index() {
                   <Icon />
                 </Box>
                 <Stack
-                  alignItems="center"
-                  justifyContent="center"
                   sx={{
+                    alignItems: "center",
                     bgcolor: "primary.main",
                     borderRadius: "50%",
                     color: "primary.contrastText",
                     fontSize: "0.75rem",
                     fontWeight: 800,
                     height: 22,
+                    justifyContent: "center",
                     position: "absolute",
                     right: -4,
                     top: -4,
@@ -191,7 +188,7 @@ export default function Index() {
                   {index + 1}
                 </Stack>
               </Box>
-              <Typography component="h3" variant="subtitle1" sx={{ fontWeight: 700 }}>
+              <Typography component="h3" sx={{ fontWeight: 700 }} variant="subtitle1">
                 {title}
               </Typography>
               <Typography color="text.secondary" variant="body2">
@@ -201,7 +198,6 @@ export default function Index() {
           ))}
         </Box>
       </Box>
-
       <Box sx={{ px: { sm: 4, xs: 2 }, py: { sm: 4, xs: 3 } }}>
         <Paper
           sx={{

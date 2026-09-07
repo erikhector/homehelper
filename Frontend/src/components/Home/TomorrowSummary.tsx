@@ -43,7 +43,7 @@ export default function TomorrowSummary({ atKindergartenCount, isFillingItems, m
           variant="filled"
         >
           <AlertTitle>Ta med till förskolan</AlertTitle>
-          <Stack direction="row" flexWrap="wrap" gap={0.75}>
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.75 }}>
             {missingItems.map((item) => (
               <Chip
                 key={item.itemId}

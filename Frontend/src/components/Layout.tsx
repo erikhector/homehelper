@@ -98,7 +98,7 @@ export default function Layout() {
                   HomeHelper
                 </Typography>
               </Box>
-              <Stack alignItems="center" direction="row" spacing={{ sm: 1.5, xs: 0.75 }}>
+              <Stack direction="row" spacing={{ sm: 1.5, xs: 0.75 }} sx={{ alignItems: "center" }}>
                 {location.pathname !== "/login" && (
                   <Button
                     component={Link}
