@@ -80,7 +80,7 @@ export default function Index() {
     <>
       <Helmet title="Mallar" />
       <Box component="section" sx={{ margin: "0 auto", maxWidth: 960, px: { sm: 4, xs: 2 }, py: { sm: 5, xs: 3 } }}>
-        <Stack direction={{ sm: "row", xs: "column" }} spacing={2} sx={{ justifyContent: "space-between", mb: 3 }}>
+        <Stack direction={{ md: "row", xs: "column" }} spacing={2} sx={{ justifyContent: "space-between", mb: 3 }}>
           <Box>
             <Typography component="h1" variant="h4">
               Mallar
@@ -89,11 +89,11 @@ export default function Index() {
               Bestäm vad som ska finnas på förskolan för varje barn.
             </Typography>
           </Box>
-          <Stack direction={{ sm: "row", xs: "column" }} spacing={1}>
+          <Stack direction={{ md: "row", xs: "column" }} spacing={1}>
             <Button component={Link} startIcon={<ArrowBackRoundedIcon />} to="/children" variant="outlined">
               Gå tillbaka
             </Button>
-            <FormControl size="small" sx={{ minWidth: 200 }}>
+            <FormControl size="small" sx={{ minWidth: { md: 200 } }}>
               <InputLabel id="template-child-label">Barn</InputLabel>
               <Select
                 label="Barn"

@@ -18,7 +18,7 @@ export default function ItemTemplateControls({
   onActivateTemplate
 }: ItemTemplateControlsProps) {
   return (
-    <Stack direction={{ sm: "row", xs: "column" }} spacing={1} sx={{ mb: 2 }}>
+    <Stack direction={{ md: "row", xs: "column" }} spacing={1} sx={{ mb: 2 }}>
       <FormControl fullWidth size="small">
         <InputLabel id="template-select-label">Aktiv mall</InputLabel>
         <Select

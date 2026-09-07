@@ -68,7 +68,7 @@ export default function Layout() {
           onToggleMode={toggleMode}
         />
       )}
-      <Box sx={{ display: "flex", flex: 1, flexDirection: "column" }}>
+      <Box sx={{ display: "flex", flex: 1, flexDirection: "column", minWidth: 0 }}>
         {!isAuthenticated && (
           <AppBar color="inherit" elevation={0} position="static" sx={{ borderBottom: 1, borderColor: "divider" }}>
             <Toolbar sx={{ gap: 1, justifyContent: "space-between", minHeight: { sm: 64, xs: 56 } }}>

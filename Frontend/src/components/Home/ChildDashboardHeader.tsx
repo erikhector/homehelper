@@ -38,9 +38,9 @@ export default function ChildDashboardHeader({
   return (
     <Box
       sx={{
-        alignItems: { sm: "center" },
+        alignItems: { md: "center" },
         display: "flex",
-        flexDirection: { sm: "row", xs: "column" },
+        flexDirection: { md: "row", xs: "column" },
         gap: 2,
         justifyContent: "space-between",
         mb: 2.5
@@ -81,8 +81,8 @@ export default function ChildDashboardHeader({
           </Box>
         )}
       </Box>
-      <Stack direction="row" spacing={1}>
-        <FormControl size="small" sx={{ minWidth: 160 }}>
+      <Stack direction={{ md: "row", xs: "column" }} spacing={1}>
+        <FormControl size="small" sx={{ minWidth: { md: 160 } }}>
           <InputLabel id="child-select-label">Barn</InputLabel>
           <Select label="Barn" labelId="child-select-label" value={activeChildId} onChange={(event) => onSelectChild(event.target.value)}>
             {childProfiles.map((child) => (
@@ -102,7 +102,7 @@ export default function ChildDashboardHeader({
         )}
         {selectedChild && (
           <Tooltip title="Hantera åtkomst">
-            <IconButton aria-label="Hantera åtkomst" onClick={onManageChild}>
+            <IconButton aria-label="Hantera åtkomst" sx={{ alignSelf: { md: "center", xs: "flex-end" } }} onClick={onManageChild}>
               <ManageAccountsRoundedIcon />
             </IconButton>
           </Tooltip>
